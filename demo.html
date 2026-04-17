@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ztelier Common Kit — Demo</title>
+  <link rel="stylesheet" href="ztelier-tokens.css">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .demo-main {
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--ztelier-space-6) var(--ztelier-space-6) var(--ztelier-space-12);
+      flex: 1;
+    }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--ztelier-space-4);
+    }
+    .swatch {
+      padding: var(--ztelier-space-4);
+      border-radius: var(--ztelier-radius);
+      border: 1px solid var(--ztelier-muted-soft);
+      background: var(--ztelier-surface-white);
+    }
+    .swatch__chip {
+      width: 100%;
+      height: 48px;
+      border-radius: var(--ztelier-radius-sm);
+      margin-bottom: var(--ztelier-space-2);
+      border: 1px solid var(--ztelier-muted-soft);
+    }
+    .swatch__name {
+      font-size: var(--ztelier-font-sm);
+      font-weight: 600;
+      color: var(--ztelier-ink);
+    }
+    .swatch__hex {
+      font-family: var(--ztelier-font-mono);
+      font-size: var(--ztelier-font-xs);
+      color: var(--ztelier-muted);
+    }
+    pre {
+      background: var(--ztelier-deep);
+      color: #E3EEFE;
+      padding: var(--ztelier-space-4);
+      border-radius: var(--ztelier-radius);
+      font-family: var(--ztelier-font-mono);
+      font-size: var(--ztelier-font-xs);
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .row { display: flex; gap: var(--ztelier-space-2); flex-wrap: wrap; align-items: center; }
+    h2.ztelier-section__title { margin-top: 0; }
+  </style>
+</head>
+<body class="ztelier-scope">
+
+  <!-- Web Component での使用例 -->
+  <ztelier-header tool-name="Common Kit Demo" tool-version="v1.0.0" tool-color="#B8895E"></ztelier-header>
+
+  <main class="demo-main">
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">1. カラーパレット</h2>
+      <p style="color: var(--ztelier-muted); font-size: var(--ztelier-font-sm);">
+        60-30-10の法則：60% Paper+Charcoal、30% Blue/Navy、10% Sage
+      </p>
+
+      <div class="demo-grid" style="margin-top: var(--ztelier-space-4);">
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-primary);"></div>
+          <div class="swatch__name">Zscaler Blue (Primary)</div>
+          <div class="swatch__hex">#246CF7</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-deep);"></div>
+          <div class="swatch__name">Zscaler Navy (Deep)</div>
+          <div class="swatch__hex">#001744</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-accent);"></div>
+          <div class="swatch__name">Sage (Accent)</div>
+          <div class="swatch__hex">#7BA05B</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-surface);"></div>
+          <div class="swatch__name">Paper (Surface)</div>
+          <div class="swatch__hex">#F7F9FB</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-ink);"></div>
+          <div class="swatch__name">Charcoal (Ink)</div>
+          <div class="swatch__hex">#2A2D34</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-muted);"></div>
+          <div class="swatch__name">Stone (Muted)</div>
+          <div class="swatch__hex">#8A8F98</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: var(--ztelier-font-md); margin-top: var(--ztelier-space-8); margin-bottom: var(--ztelier-space-3);">状態色 / 成熟度レベル</h3>
+      <div class="row">
+        <span class="ztelier-badge ztelier-badge--level-1">Level 1 / Traditional</span>
+        <span class="ztelier-badge ztelier-badge--level-2">Level 2 / Initial</span>
+        <span class="ztelier-badge ztelier-badge--level-3">Level 3 / Advanced</span>
+        <span class="ztelier-badge ztelier-badge--level-4">Level 4 / Optimal</span>
+        <span class="ztelier-badge ztelier-badge--muted">未評価</span>
+        <span class="ztelier-badge ztelier-badge--accent">Ztelier固有</span>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">2. ボタン・アラート</h2>
+      <div class="row" style="margin-bottom: var(--ztelier-space-4);">
+        <button class="ztelier-btn ztelier-btn--primary">Primary</button>
+        <button class="ztelier-btn ztelier-btn--secondary">Secondary</button>
+        <button class="ztelier-btn ztelier-btn--ghost">Ghost</button>
+        <button class="ztelier-btn ztelier-btn--accent">Accent (Sage)</button>
+        <button class="ztelier-btn ztelier-btn--danger">Danger</button>
+        <button class="ztelier-btn ztelier-btn--primary" disabled>Disabled</button>
+      </div>
+
+      <div class="ztelier-alert ztelier-alert--info" style="margin-bottom: var(--ztelier-space-2);">
+        <strong>ℹ️ 左「Governance (ZTMM)」と右「Govern (CSF)」は関連しますが別物です。</strong>
+        左はZT実装そのものの統制、右は組織全体のセキュリティ戦略統制。
+      </div>
+      <div class="ztelier-alert ztelier-alert--warning" style="margin-bottom: var(--ztelier-space-2);">
+        組織摩擦未評価のため、実効到達時期は評価できません（Forg未入力時の挙動）。
+      </div>
+      <div class="ztelier-alert ztelier-alert--accent">
+        セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります。
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">3. フォーム入力</h2>
+      <div style="max-width: 480px;">
+        <div class="ztelier-field">
+          <label class="ztelier-field__label" for="demo-company">顧客企業名</label>
+          <span class="ztelier-field__hint">診断結果のファイル名にも使用されます</span>
+          <input class="ztelier-input" id="demo-company" type="text" placeholder="株式会社サンプル">
+        </div>
+        <div class="ztelier-field">
+          <label class="ztelier-field__label" for="demo-industry">業種</label>
+          <select class="ztelier-select" id="demo-industry">
+            <option value="">-- 選択 --</option>
+            <option value="manufacturing">製造業</option>
+            <option value="financial_services">金融サービス</option>
+            <option value="retail">小売</option>
+            <option value="healthcare">ヘルスケア</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">4. データテーブル</h2>
+      <div style="overflow-x: auto;">
+        <table class="ztelier-table">
+          <thead>
+            <tr>
+              <th>ツール</th>
+              <th>役割</th>
+              <th>ブランド基準</th>
+              <th>顧客対面</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Forg</td><td>組織摩擦診断</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>MAAZ</td><td>ZTMM×MITRE 技術評価</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>Amplify</td><td>ユースケースマッピング</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>PUPY Uplift</td><td>戦略価格（内部限定）</td><td><span class="ztelier-badge ztelier-badge--muted">内部品質</span></td><td>❌</td></tr>
+            <tr><td>Endeavor</td><td>ROIエグゼクティブダッシュボード</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>Showtoku</td><td>NIST CSF 2.0/AI RMF 評価</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">5. Metric / Score 表示</h2>
+      <div class="ztelier-card ztelier-card--elevated" style="max-width: 420px;">
+        <div class="ztelier-card__subtitle">組織摩擦係数（Forg F値）</div>
+        <div class="ztelier-metric ztelier-metric--xl">0.38</div>
+        <div style="display: flex; gap: var(--ztelier-space-2); margin-top: var(--ztelier-space-2); align-items: center;">
+          <span class="ztelier-badge ztelier-badge--level-2">業界平均 0.52</span>
+          <span style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted);">-0.14（要改善）</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">6. Context I/O デモ</h2>
+      <p style="color: var(--ztelier-muted); font-size: var(--ztelier-font-sm); margin-bottom: var(--ztelier-space-4);">
+        Loader / Writer / Migrate の動作確認。localStorage を使うので、開いたタブ内で完結します。
+      </p>
+
+      <div class="row" style="margin-bottom: var(--ztelier-space-4);">
+        <button class="ztelier-btn ztelier-btn--primary" id="btn-create">新規セッション作成</button>
+        <button class="ztelier-btn ztelier-btn--secondary" id="btn-update-forg">Forg結果を書き込み</button>
+        <button class="ztelier-btn ztelier-btn--secondary" id="btn-save">localStorage保存</button>
+        <button class="ztelier-btn ztelier-btn--secondary" id="btn-load">localStorage読込</button>
+        <button class="ztelier-btn ztelier-btn--accent" id="btn-export">JSONダウンロード</button>
+        <button class="ztelier-btn ztelier-btn--ghost" id="btn-validate">バリデーション</button>
+        <button class="ztelier-btn ztelier-btn--danger" id="btn-clear">削除</button>
+      </div>
+
+      <pre id="context-viewer">（まだ何も表示されていません）</pre>
+    </section>
+
+  </main>
+
+  <!-- Web Component フッター -->
+  <ztelier-footer
+    frameworks="MITRE ATT&CK, MITRE ATLAS, CISA ZTMM v2, NIST CSF 2.0"
+    about-text="Zscaler Japanのアーキテクトが業務効率化のために個人的に立て付けた内部ツール群">
+  </ztelier-footer>
+
+  <!-- スクリプト読み込み -->
+  <script src="ztelier-header.js"></script>
+  <script src="ztelier-footer.js"></script>
+  <script src="ztelier-context-loader.js"></script>
+  <script src="ztelier-context-writer.js"></script>
+  <script src="ztelier-context-migrate.js"></script>
+
+  <script>
+    // ============================================================
+    // Context I/O デモロジック
+    // ============================================================
+    const viewer = document.getElementById('context-viewer');
+    let currentCtx = null;
+
+    function render() {
+      viewer.textContent = currentCtx
+        ? JSON.stringify(currentCtx, null, 2)
+        : '（currentCtx は null）';
+    }
+
+    document.getElementById('btn-create').addEventListener('click', () => {
+      currentCtx = ZtelierContext.empty({
+        company_name: '株式会社デモ',
+        created_by: 'demo-user'
+      });
+      render();
+    });
+
+    document.getElementById('btn-update-forg').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      ZtelierContext.updateTool(currentCtx, 'forg', {
+        completed: true,
+        version: '4.3.0',
+        variables: { S: 0.45, L: 0.25, C: 0.70, L_prime: 0.60 },
+        F_value: 0.54,
+        industry_average_F: 0.52,
+        deviation_from_average: 0.02,
+        dominant_pattern: {
+          pattern_id: 'leadership_gap',
+          pattern_name_ja: 'Leadership Gap',
+          diagnosis_ja: '経営層の発信が現場に届いていない',
+          most_deviated_variable: 'L'
+        },
+        suggestion: {
+          action_ja: '次の全社発信でCEO自身が「守りたい事業・顧客・データ」を具体名で語る',
+          reference_framework: 'Kotter Step 1 (Urgency)',
+          common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
+        }
+      });
+      render();
+    });
+
+    document.getElementById('btn-save').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      ZtelierContext.save(currentCtx);
+      alert('localStorage に保存しました: ' + currentCtx.meta.session_id);
+    });
+
+    document.getElementById('btn-load').addEventListener('click', () => {
+      const sessions = ZtelierContext.listSessions();
+      if (sessions.length === 0) {
+        alert('保存済みセッションがありません');
+        return;
+      }
+      const pick = prompt('セッションIDを選択:\n' + sessions.join('\n'), sessions[0]);
+      if (!pick) return;
+      currentCtx = ZtelierContext.load(pick);
+      if (!currentCtx) { alert('見つかりませんでした'); return; }
+      render();
+    });
+
+    document.getElementById('btn-export').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      const name = ZtelierContext.exportToFile(currentCtx);
+      alert('ダウンロード: ' + name);
+    });
+
+    document.getElementById('btn-validate').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      const errors = ZtelierContext.validate(currentCtx);
+      if (errors.length === 0) {
+        alert('✅ バリデーションOK（エラーなし）');
+      } else {
+        alert('⚠️ ' + errors.length + '件のエラー:\n' +
+          errors.map(e => `- ${e.path}: ${e.message}`).join('\n'));
+      }
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (!currentCtx) { alert('削除対象がありません'); return; }
+      if (!confirm(`セッション ${currentCtx.meta.session_id} を削除しますか？`)) return;
+      ZtelierContext.remove(currentCtx.meta.session_id);
+      currentCtx = null;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

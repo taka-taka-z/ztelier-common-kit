@@ -1,0 +1,497 @@
+/* ============================================================================
+ * Ztelier Common Kit — Design Tokens
+ * v1.0.0 (2026-04-17)
+ *
+ * Ztelier スイート全ツール共通のデザイントークン定義。
+ * カラー・タイポグラフィ・スペーシング・状態色・ユーティリティクラスを提供。
+ *
+ * 設計思想：
+ *   - 60% Surface + Charcoal（背景・本文）
+ *   - 30% Zscaler Blue/Navy（ハイタッチ親和性）
+ *   - 10% Sage（Ztelier固有の差別化・組織の生命感）
+ *   - Bootstrap量産感のデフォルト色は回避
+ *   - 「道具は透明であるべき」— データと判断にユーザーの意識を向ける
+ *
+ * 使い方：
+ *   <link rel="stylesheet" href="ztelier-tokens.css">
+ *   または任意のHTMLに <style>@import "ztelier-tokens.css";</style>
+ * ========================================================================== */
+
+/* ------------------------------------------------------------------
+ * :root — Design Tokens
+ * ------------------------------------------------------------------ */
+:root {
+  /* ==== Brand Palette（設計書 Phase 1 準拠） ==== */
+  --ztelier-primary:        #246CF7;  /* Zscaler Blue — CTAボタン、主要アクセント、グラフ強調 */
+  --ztelier-primary-hover:  #1a5be0;  /* ホバー（10%暗） */
+  --ztelier-primary-active: #124bc9;  /* アクティブ（20%暗） */
+  --ztelier-primary-soft:   #E3EEFE;  /* 薄い背景（選択状態等） */
+
+  --ztelier-deep:           #001744;  /* Zscaler Navy — ヘッダー背景、見出し */
+  --ztelier-deep-hover:     #001030;
+  --ztelier-deep-soft:      #D6DCE8;
+
+  --ztelier-accent:         #7BA05B;  /* Sage — Ztelier固有の差別化（唯一の有機色・組織の生命感） */
+  --ztelier-accent-hover:   #6B8E4E;
+  --ztelier-accent-soft:    #E3EBD5;
+
+  /* ==== Surface & Ink（60%層） ==== */
+  --ztelier-surface:        #F7F9FB;  /* Paper — ほぼ白に微かな青み（Navy 染め） */
+  --ztelier-surface-alt:    #EEF2F6;  /* 1段濃い背景（セクション区切り等） */
+  --ztelier-surface-white:  #FFFFFF;  /* 純白カード（データ密度高い場面） */
+
+  --ztelier-ink:            #2A2D34;  /* Charcoal — 本文テキスト（純黒回避） */
+  --ztelier-ink-strong:     #1A1C22;  /* 強調テキスト・見出し */
+  --ztelier-muted:          #8A8F98;  /* Stone — 補助テキスト、罫線、無効状態 */
+  --ztelier-muted-soft:     #D4D8DE;  /* 薄い罫線 */
+
+  /* ==== 状態色（設計書準拠） ==== */
+  --ztelier-success:        #4A7C59;  /* 深緑（サルビア系） */
+  --ztelier-success-soft:   #E3EEE7;
+  --ztelier-warning:        #C77F3A;  /* 琥珀 */
+  --ztelier-warning-soft:   #F6E9D9;
+  --ztelier-danger:         #A84A4A;  /* バーガンディ系 */
+  --ztelier-danger-soft:    #F1DCDC;
+  --ztelier-info:           #246CF7;  /* Primary と同色（通知用） */
+  --ztelier-info-soft:      #E3EEFE;
+
+  /* ==== 成熟度レベル色（MAAZ/Showtoku共通） ==== */
+  --ztelier-level-1:        #A84A4A;  /* Traditional / Tier 1（危険・未着手） */
+  --ztelier-level-2:        #C77F3A;  /* Initial / Tier 2（初期段階） */
+  --ztelier-level-3:        #246CF7;  /* Advanced / Tier 3（進行中） */
+  --ztelier-level-4:        #4A7C59;  /* Optimal / Tier 4（最適） */
+
+  /* ==== 各ツールアクセント色（icon/tag用） ==== */
+  --ztelier-tool-amplify:   #246CF7;  /* Zscaler Blue */
+  --ztelier-tool-maaz:      #001744;  /* Zscaler Navy */
+  --ztelier-tool-showtoku:  #4A8BFF;  /* Light Blue */
+  --ztelier-tool-forg:      #7BA05B;  /* Sage — 組織診断の有機性・生命感（唯一の有機色） */
+  --ztelier-tool-endeavor:  #001744;  /* Zscaler Navy — 経営層向け */
+  --ztelier-tool-pupy:      #8A8F98;  /* Stone — 内部限定マーカー（無彩色） */
+
+  /* ==== Typography ==== */
+  /* 設計書準拠：欧文 Inter、和文 メイリオ、Arialは意図的回避 */
+  --ztelier-font-sans:
+    'Inter',
+    'Meiryo', 'メイリオ',
+    'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Segoe UI',
+    -apple-system, BlinkMacSystemFont,
+    sans-serif;
+
+  --ztelier-font-mono:
+    'JetBrains Mono', 'Consolas', 'Menlo',
+    'Meiryo', 'メイリオ',
+    monospace;
+
+  /* タイプスケール（業務ツール向け、情報密度重視） */
+  --ztelier-font-xs:    0.75rem;     /* 12px — キャプション、メタ */
+  --ztelier-font-sm:    0.8125rem;   /* 13px — ラベル、補助 */
+  --ztelier-font-base:  0.875rem;    /* 14px — 本文 */
+  --ztelier-font-md:    1rem;        /* 16px — セクション見出し */
+  --ztelier-font-lg:    1.25rem;     /* 20px — カード見出し */
+  --ztelier-font-xl:    1.5rem;      /* 24px — ページ見出し */
+  --ztelier-font-2xl:   2rem;        /* 32px — ヒーロー（Exec Brief等） */
+
+  --ztelier-leading-tight:   1.3;
+  --ztelier-leading-normal:  1.6;
+  --ztelier-leading-relaxed: 1.8;
+
+  /* ==== Spacing（4px基準） ==== */
+  --ztelier-space-1:  4px;
+  --ztelier-space-2:  8px;
+  --ztelier-space-3:  12px;
+  --ztelier-space-4:  16px;
+  --ztelier-space-5:  20px;
+  --ztelier-space-6:  24px;
+  --ztelier-space-8:  32px;
+  --ztelier-space-10: 40px;
+  --ztelier-space-12: 48px;
+  --ztelier-space-16: 64px;
+
+  /* ==== Radius（控えめ） ==== */
+  --ztelier-radius-sm: 3px;
+  --ztelier-radius:    4px;
+  --ztelier-radius-md: 6px;
+  --ztelier-radius-lg: 8px;
+
+  /* ==== Shadow（業務ツール品格のため軽量） ==== */
+  --ztelier-shadow-xs: 0 1px 2px rgba(0, 23, 68, 0.05);
+  --ztelier-shadow-sm: 0 1px 3px rgba(0, 23, 68, 0.08), 0 1px 2px rgba(0, 23, 68, 0.04);
+  --ztelier-shadow-md: 0 4px 8px rgba(0, 23, 68, 0.08), 0 2px 4px rgba(0, 23, 68, 0.04);
+  --ztelier-shadow-lg: 0 10px 20px rgba(0, 23, 68, 0.10), 0 3px 6px rgba(0, 23, 68, 0.05);
+
+  /* ==== Focus Ring（WCAG AA） ==== */
+  --ztelier-focus-ring: 0 0 0 3px rgba(36, 108, 247, 0.25);
+
+  /* ==== Transition ==== */
+  --ztelier-transition-fast:   0.12s ease;
+  --ztelier-transition:        0.18s ease;
+  --ztelier-transition-slow:   0.28s ease-out;
+
+  /* ==== Z-index ==== */
+  --ztelier-z-header:  100;
+  --ztelier-z-footer:  100;
+  --ztelier-z-dropdown: 1000;
+  --ztelier-z-modal:   2000;
+  --ztelier-z-toast:   3000;
+}
+
+/* ------------------------------------------------------------------
+ * Base Reset — Ztelier用（既存ツール構造を壊さないスコープ限定）
+ * .ztelier-scope 配下のみに適用（ツール本体は影響を受けない）
+ * ------------------------------------------------------------------ */
+.ztelier-scope *,
+.ztelier-scope *::before,
+.ztelier-scope *::after {
+  box-sizing: border-box;
+}
+
+.ztelier-scope {
+  font-family: var(--ztelier-font-sans);
+  font-size: var(--ztelier-font-base);
+  line-height: var(--ztelier-leading-normal);
+  color: var(--ztelier-ink);
+  background: var(--ztelier-surface);
+  font-feature-settings: "palt" 1;  /* 和欧混植時の字間最適化 */
+}
+
+/* ------------------------------------------------------------------
+ * Utility Classes
+ * 接頭辞 .ztelier- で名前衝突を回避。
+ * 各ツールのローカルスタイルと共存可能。
+ * ------------------------------------------------------------------ */
+
+/* ==== Buttons ==== */
+.ztelier-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ztelier-space-2);
+  padding: var(--ztelier-space-2) var(--ztelier-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--ztelier-radius);
+  font-family: inherit;
+  font-size: var(--ztelier-font-base);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--ztelier-transition-fast),
+    border-color var(--ztelier-transition-fast),
+    color var(--ztelier-transition-fast),
+    box-shadow var(--ztelier-transition-fast);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ztelier-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ztelier-focus-ring);
+}
+
+.ztelier-btn:disabled,
+.ztelier-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ztelier-btn--primary {
+  background: var(--ztelier-primary);
+  color: #fff;
+}
+.ztelier-btn--primary:hover:not(:disabled) { background: var(--ztelier-primary-hover); }
+.ztelier-btn--primary:active:not(:disabled) { background: var(--ztelier-primary-active); }
+
+.ztelier-btn--secondary {
+  background: transparent;
+  color: var(--ztelier-primary);
+  border-color: var(--ztelier-primary);
+}
+.ztelier-btn--secondary:hover:not(:disabled) {
+  background: var(--ztelier-primary-soft);
+}
+
+.ztelier-btn--ghost {
+  background: transparent;
+  color: var(--ztelier-ink);
+}
+.ztelier-btn--ghost:hover:not(:disabled) {
+  background: var(--ztelier-surface-alt);
+}
+
+.ztelier-btn--accent {
+  background: var(--ztelier-accent);
+  color: #fff;
+}
+.ztelier-btn--accent:hover:not(:disabled) { background: var(--ztelier-accent-hover); }
+
+.ztelier-btn--danger {
+  background: var(--ztelier-danger);
+  color: #fff;
+}
+
+.ztelier-btn--sm {
+  padding: var(--ztelier-space-1) var(--ztelier-space-3);
+  font-size: var(--ztelier-font-sm);
+}
+
+.ztelier-btn--lg {
+  padding: var(--ztelier-space-3) var(--ztelier-space-6);
+  font-size: var(--ztelier-font-md);
+}
+
+/* ==== Cards ==== */
+.ztelier-card {
+  background: var(--ztelier-surface-white);
+  border: 1px solid var(--ztelier-muted-soft);
+  border-radius: var(--ztelier-radius-md);
+  padding: var(--ztelier-space-6);
+}
+
+.ztelier-card--elevated {
+  box-shadow: var(--ztelier-shadow-sm);
+  border-color: transparent;
+}
+
+.ztelier-card__title {
+  font-size: var(--ztelier-font-lg);
+  font-weight: 700;
+  color: var(--ztelier-deep);
+  margin: 0 0 var(--ztelier-space-3) 0;
+  letter-spacing: -0.01em;
+}
+
+.ztelier-card__subtitle {
+  font-size: var(--ztelier-font-sm);
+  color: var(--ztelier-muted);
+  margin: 0 0 var(--ztelier-space-4) 0;
+}
+
+/* ==== Badges / Level Pills ==== */
+.ztelier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ztelier-space-1);
+  padding: 2px var(--ztelier-space-2);
+  border-radius: var(--ztelier-radius-sm);
+  font-size: var(--ztelier-font-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ztelier-badge--level-1 { background: var(--ztelier-danger-soft);  color: var(--ztelier-danger); }
+.ztelier-badge--level-2 { background: var(--ztelier-warning-soft); color: var(--ztelier-warning); }
+.ztelier-badge--level-3 { background: var(--ztelier-primary-soft); color: var(--ztelier-primary); }
+.ztelier-badge--level-4 { background: var(--ztelier-success-soft); color: var(--ztelier-success); }
+.ztelier-badge--muted   { background: var(--ztelier-surface-alt);  color: var(--ztelier-muted); }
+.ztelier-badge--accent  { background: var(--ztelier-accent-soft);  color: var(--ztelier-accent); }
+
+/* ==== Form Controls ==== */
+.ztelier-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ztelier-space-1);
+  margin-bottom: var(--ztelier-space-4);
+}
+
+.ztelier-field__label {
+  font-size: var(--ztelier-font-sm);
+  font-weight: 600;
+  color: var(--ztelier-ink);
+}
+
+.ztelier-field__hint {
+  font-size: var(--ztelier-font-xs);
+  color: var(--ztelier-muted);
+}
+
+.ztelier-input,
+.ztelier-select,
+.ztelier-textarea {
+  width: 100%;
+  padding: var(--ztelier-space-2) var(--ztelier-space-3);
+  border: 1px solid var(--ztelier-muted-soft);
+  border-radius: var(--ztelier-radius);
+  background: var(--ztelier-surface-white);
+  color: var(--ztelier-ink);
+  font-family: inherit;
+  font-size: var(--ztelier-font-base);
+  transition: border-color var(--ztelier-transition-fast), box-shadow var(--ztelier-transition-fast);
+}
+
+.ztelier-input:focus,
+.ztelier-select:focus,
+.ztelier-textarea:focus {
+  outline: none;
+  border-color: var(--ztelier-primary);
+  box-shadow: var(--ztelier-focus-ring);
+}
+
+.ztelier-input[aria-invalid="true"] {
+  border-color: var(--ztelier-danger);
+}
+
+/* ==== Data Table ==== */
+.ztelier-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--ztelier-font-base);
+}
+
+.ztelier-table thead th {
+  background: var(--ztelier-surface-alt);
+  color: var(--ztelier-deep);
+  font-weight: 600;
+  font-size: var(--ztelier-font-sm);
+  letter-spacing: 0.02em;
+  padding: var(--ztelier-space-2) var(--ztelier-space-3);
+  border-bottom: 2px solid var(--ztelier-deep);
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ztelier-table tbody td {
+  padding: var(--ztelier-space-2) var(--ztelier-space-3);
+  border-bottom: 1px solid var(--ztelier-muted-soft);
+  vertical-align: top;
+}
+
+.ztelier-table tbody tr:hover {
+  background: var(--ztelier-surface-alt);
+}
+
+/* ==== Metric Value (数値表示) ==== */
+.ztelier-metric {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ztelier-deep);
+}
+.ztelier-metric--lg  { font-size: var(--ztelier-font-xl); }
+.ztelier-metric--xl  { font-size: var(--ztelier-font-2xl); }
+
+/* ==== Section Divider ==== */
+.ztelier-section {
+  padding: var(--ztelier-space-8) 0;
+  border-bottom: 1px solid var(--ztelier-muted-soft);
+}
+.ztelier-section:last-child { border-bottom: none; }
+
+.ztelier-section__title {
+  font-size: var(--ztelier-font-md);
+  font-weight: 700;
+  color: var(--ztelier-deep);
+  margin: 0 0 var(--ztelier-space-4) 0;
+  padding-bottom: var(--ztelier-space-1);
+  border-bottom: 2px solid var(--ztelier-primary);
+  display: inline-block;
+  letter-spacing: -0.01em;
+}
+
+/* ==== Alert / Callout ==== */
+.ztelier-alert {
+  padding: var(--ztelier-space-3) var(--ztelier-space-4);
+  border-left: 3px solid var(--ztelier-muted);
+  border-radius: var(--ztelier-radius);
+  background: var(--ztelier-surface-alt);
+  font-size: var(--ztelier-font-sm);
+  line-height: var(--ztelier-leading-normal);
+}
+
+.ztelier-alert--info    { border-left-color: var(--ztelier-primary); background: var(--ztelier-primary-soft); }
+.ztelier-alert--success { border-left-color: var(--ztelier-success); background: var(--ztelier-success-soft); }
+.ztelier-alert--warning { border-left-color: var(--ztelier-warning); background: var(--ztelier-warning-soft); }
+.ztelier-alert--danger  { border-left-color: var(--ztelier-danger);  background: var(--ztelier-danger-soft); }
+.ztelier-alert--accent  { border-left-color: var(--ztelier-accent);  background: var(--ztelier-accent-soft); }
+
+/* ------------------------------------------------------------------
+ * Header / Footer（Web Component 無しでも使える素のクラス）
+ * ------------------------------------------------------------------ */
+.ztelier-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ztelier-space-2);
+  padding: var(--ztelier-space-2) var(--ztelier-space-4);
+  background: var(--ztelier-deep);
+  color: #fff;
+  font-size: var(--ztelier-font-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.ztelier-header__brand {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ztelier-header__separator {
+  opacity: 0.5;
+  margin: 0 var(--ztelier-space-1);
+}
+
+.ztelier-header__tool {
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.ztelier-header__version {
+  font-family: var(--ztelier-font-mono);
+  font-size: var(--ztelier-font-xs);
+  opacity: 0.7;
+  margin-left: var(--ztelier-space-2);
+}
+
+.ztelier-footer {
+  padding: var(--ztelier-space-4) var(--ztelier-space-6);
+  background: var(--ztelier-surface-alt);
+  border-top: 1px solid var(--ztelier-muted-soft);
+  color: var(--ztelier-muted);
+  font-size: var(--ztelier-font-xs);
+  text-align: center;
+  line-height: var(--ztelier-leading-normal);
+}
+
+.ztelier-footer__disclaimer {
+  font-weight: 600;
+  color: var(--ztelier-ink);
+  margin-bottom: var(--ztelier-space-1);
+}
+
+.ztelier-footer__frameworks {
+  color: var(--ztelier-muted);
+}
+
+/* ------------------------------------------------------------------
+ * Accessibility: reduced-motion
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Print
+ * ------------------------------------------------------------------ */
+@media print {
+  .ztelier-header {
+    background: #fff !important;
+    color: var(--ztelier-ink) !important;
+    border-bottom: 2px solid var(--ztelier-deep);
+  }
+  .ztelier-footer {
+    background: #fff !important;
+    border-top: 1px solid var(--ztelier-muted);
+  }
+  .ztelier-no-print { display: none !important; }
+  .ztelier-table { page-break-inside: avoid; }
+  .ztelier-section { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+}

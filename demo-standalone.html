@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ztelier Common Kit — Demo (Standalone)</title>
+  <style>
+/* ============================================================================
+ * Ztelier Common Kit — Design Tokens
+ * v1.0.0 (2026-04-17)
+ *
+ * Ztelier スイート全ツール共通のデザイントークン定義。
+ * カラー・タイポグラフィ・スペーシング・状態色・ユーティリティクラスを提供。
+ *
+ * 設計思想：
+ *   - 60% Surface + Charcoal（背景・本文）
+ *   - 30% Zscaler Blue/Navy（ハイタッチ親和性）
+ *   - 10% Sage（Ztelier固有の差別化・組織の生命感）
+ *   - Bootstrap量産感のデフォルト色は回避
+ *   - 「道具は透明であるべき」— データと判断にユーザーの意識を向ける
+ *
+ * 使い方：
+ *   <link rel="stylesheet" href="ztelier-tokens.css">
+ *   または任意のHTMLに <style>@import "ztelier-tokens.css";</style>
+ * ========================================================================== */
+
+/* ------------------------------------------------------------------
+ * :root — Design Tokens
+ * ------------------------------------------------------------------ */
+:root {
+  /* ==== Brand Palette（設計書 Phase 1 準拠） ==== */
+  --ztelier-primary:        #246CF7;  /* Zscaler Blue — CTAボタン、主要アクセント、グラフ強調 */
+  --ztelier-primary-hover:  #1a5be0;  /* ホバー（10%暗） */
+  --ztelier-primary-active: #124bc9;  /* アクティブ（20%暗） */
+  --ztelier-primary-soft:   #E3EEFE;  /* 薄い背景（選択状態等） */
+
+  --ztelier-deep:           #001744;  /* Zscaler Navy — ヘッダー背景、見出し */
+  --ztelier-deep-hover:     #001030;
+  --ztelier-deep-soft:      #D6DCE8;
+
+  --ztelier-accent:         #7BA05B;  /* Sage — Ztelier固有の差別化（唯一の有機色・組織の生命感） */
+  --ztelier-accent-hover:   #6B8E4E;
+  --ztelier-accent-soft:    #E3EBD5;
+
+  /* ==== Surface & Ink（60%層） ==== */
+  --ztelier-surface:        #F7F9FB;  /* Paper — ほぼ白に微かな青み（Navy 染め） */
+  --ztelier-surface-alt:    #EEF2F6;  /* 1段濃い背景（セクション区切り等） */
+  --ztelier-surface-white:  #FFFFFF;  /* 純白カード（データ密度高い場面） */
+
+  --ztelier-ink:            #2A2D34;  /* Charcoal — 本文テキスト（純黒回避） */
+  --ztelier-ink-strong:     #1A1C22;  /* 強調テキスト・見出し */
+  --ztelier-muted:          #8A8F98;  /* Stone — 補助テキスト、罫線、無効状態 */
+  --ztelier-muted-soft:     #D4D8DE;  /* 薄い罫線 */
+
+  /* ==== 状態色（設計書準拠） ==== */
+  --ztelier-success:        #4A7C59;  /* 深緑（サルビア系） */
+  --ztelier-success-soft:   #E3EEE7;
+  --ztelier-warning:        #C77F3A;  /* 琥珀 */
+  --ztelier-warning-soft:   #F6E9D9;
+  --ztelier-danger:         #A84A4A;  /* バーガンディ系 */
+  --ztelier-danger-soft:    #F1DCDC;
+  --ztelier-info:           #246CF7;  /* Primary と同色（通知用） */
+  --ztelier-info-soft:      #E3EEFE;
+
+  /* ==== 成熟度レベル色（MAAZ/Showtoku共通） ==== */
+  --ztelier-level-1:        #A84A4A;  /* Traditional / Tier 1（危険・未着手） */
+  --ztelier-level-2:        #C77F3A;  /* Initial / Tier 2（初期段階） */
+  --ztelier-level-3:        #246CF7;  /* Advanced / Tier 3（進行中） */
+  --ztelier-level-4:        #4A7C59;  /* Optimal / Tier 4（最適） */
+
+  /* ==== 各ツールアクセント色（icon/tag用） ==== */
+  --ztelier-tool-amplify:   #246CF7;  /* Zscaler Blue */
+  --ztelier-tool-maaz:      #001744;  /* Zscaler Navy */
+  --ztelier-tool-showtoku:  #4A8BFF;  /* Light Blue */
+  --ztelier-tool-forg:      #7BA05B;  /* Sage — 組織診断の有機性・生命感（唯一の有機色） */
+  --ztelier-tool-endeavor:  #001744;  /* Zscaler Navy — 経営層向け */
+  --ztelier-tool-pupy:      #8A8F98;  /* Stone — 内部限定マーカー（無彩色） */
+
+  /* ==== Typography ==== */
+  /* 設計書準拠：欧文 Inter、和文 メイリオ、Arialは意図的回避 */
+  --ztelier-font-sans:
+    'Inter',
+    'Meiryo', 'メイリオ',
+    'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
+    'Segoe UI',
+    -apple-system, BlinkMacSystemFont,
+    sans-serif;
+
+  --ztelier-font-mono:
+    'JetBrains Mono', 'Consolas', 'Menlo',
+    'Meiryo', 'メイリオ',
+    monospace;
+
+  /* タイプスケール（業務ツール向け、情報密度重視） */
+  --ztelier-font-xs:    0.75rem;     /* 12px — キャプション、メタ */
+  --ztelier-font-sm:    0.8125rem;   /* 13px — ラベル、補助 */
+  --ztelier-font-base:  0.875rem;    /* 14px — 本文 */
+  --ztelier-font-md:    1rem;        /* 16px — セクション見出し */
+  --ztelier-font-lg:    1.25rem;     /* 20px — カード見出し */
+  --ztelier-font-xl:    1.5rem;      /* 24px — ページ見出し */
+  --ztelier-font-2xl:   2rem;        /* 32px — ヒーロー（Exec Brief等） */
+
+  --ztelier-leading-tight:   1.3;
+  --ztelier-leading-normal:  1.6;
+  --ztelier-leading-relaxed: 1.8;
+
+  /* ==== Spacing（4px基準） ==== */
+  --ztelier-space-1:  4px;
+  --ztelier-space-2:  8px;
+  --ztelier-space-3:  12px;
+  --ztelier-space-4:  16px;
+  --ztelier-space-5:  20px;
+  --ztelier-space-6:  24px;
+  --ztelier-space-8:  32px;
+  --ztelier-space-10: 40px;
+  --ztelier-space-12: 48px;
+  --ztelier-space-16: 64px;
+
+  /* ==== Radius（控えめ） ==== */
+  --ztelier-radius-sm: 3px;
+  --ztelier-radius:    4px;
+  --ztelier-radius-md: 6px;
+  --ztelier-radius-lg: 8px;
+
+  /* ==== Shadow（業務ツール品格のため軽量） ==== */
+  --ztelier-shadow-xs: 0 1px 2px rgba(0, 23, 68, 0.05);
+  --ztelier-shadow-sm: 0 1px 3px rgba(0, 23, 68, 0.08), 0 1px 2px rgba(0, 23, 68, 0.04);
+  --ztelier-shadow-md: 0 4px 8px rgba(0, 23, 68, 0.08), 0 2px 4px rgba(0, 23, 68, 0.04);
+  --ztelier-shadow-lg: 0 10px 20px rgba(0, 23, 68, 0.10), 0 3px 6px rgba(0, 23, 68, 0.05);
+
+  /* ==== Focus Ring（WCAG AA） ==== */
+  --ztelier-focus-ring: 0 0 0 3px rgba(36, 108, 247, 0.25);
+
+  /* ==== Transition ==== */
+  --ztelier-transition-fast:   0.12s ease;
+  --ztelier-transition:        0.18s ease;
+  --ztelier-transition-slow:   0.28s ease-out;
+
+  /* ==== Z-index ==== */
+  --ztelier-z-header:  100;
+  --ztelier-z-footer:  100;
+  --ztelier-z-dropdown: 1000;
+  --ztelier-z-modal:   2000;
+  --ztelier-z-toast:   3000;
+}
+
+/* ------------------------------------------------------------------
+ * Base Reset — Ztelier用（既存ツール構造を壊さないスコープ限定）
+ * .ztelier-scope 配下のみに適用（ツール本体は影響を受けない）
+ * ------------------------------------------------------------------ */
+.ztelier-scope *,
+.ztelier-scope *::before,
+.ztelier-scope *::after {
+  box-sizing: border-box;
+}
+
+.ztelier-scope {
+  font-family: var(--ztelier-font-sans);
+  font-size: var(--ztelier-font-base);
+  line-height: var(--ztelier-leading-normal);
+  color: var(--ztelier-ink);
+  background: var(--ztelier-surface);
+  font-feature-settings: "palt" 1;  /* 和欧混植時の字間最適化 */
+}
+
+/* ------------------------------------------------------------------
+ * Utility Classes
+ * 接頭辞 .ztelier- で名前衝突を回避。
+ * 各ツールのローカルスタイルと共存可能。
+ * ------------------------------------------------------------------ */
+
+/* ==== Buttons ==== */
+.ztelier-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ztelier-space-2);
+  padding: var(--ztelier-space-2) var(--ztelier-space-4);
+  border: 1px solid transparent;
+  border-radius: var(--ztelier-radius);
+  font-family: inherit;
+  font-size: var(--ztelier-font-base);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background var(--ztelier-transition-fast),
+    border-color var(--ztelier-transition-fast),
+    color var(--ztelier-transition-fast),
+    box-shadow var(--ztelier-transition-fast);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ztelier-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ztelier-focus-ring);
+}
+
+.ztelier-btn:disabled,
+.ztelier-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ztelier-btn--primary {
+  background: var(--ztelier-primary);
+  color: #fff;
+}
+.ztelier-btn--primary:hover:not(:disabled) { background: var(--ztelier-primary-hover); }
+.ztelier-btn--primary:active:not(:disabled) { background: var(--ztelier-primary-active); }
+
+.ztelier-btn--secondary {
+  background: transparent;
+  color: var(--ztelier-primary);
+  border-color: var(--ztelier-primary);
+}
+.ztelier-btn--secondary:hover:not(:disabled) {
+  background: var(--ztelier-primary-soft);
+}
+
+.ztelier-btn--ghost {
+  background: transparent;
+  color: var(--ztelier-ink);
+}
+.ztelier-btn--ghost:hover:not(:disabled) {
+  background: var(--ztelier-surface-alt);
+}
+
+.ztelier-btn--accent {
+  background: var(--ztelier-accent);
+  color: #fff;
+}
+.ztelier-btn--accent:hover:not(:disabled) { background: var(--ztelier-accent-hover); }
+
+.ztelier-btn--danger {
+  background: var(--ztelier-danger);
+  color: #fff;
+}
+
+.ztelier-btn--sm {
+  padding: var(--ztelier-space-1) var(--ztelier-space-3);
+  font-size: var(--ztelier-font-sm);
+}
+
+.ztelier-btn--lg {
+  padding: var(--ztelier-space-3) var(--ztelier-space-6);
+  font-size: var(--ztelier-font-md);
+}
+
+/* ==== Cards ==== */
+.ztelier-card {
+  background: var(--ztelier-surface-white);
+  border: 1px solid var(--ztelier-muted-soft);
+  border-radius: var(--ztelier-radius-md);
+  padding: var(--ztelier-space-6);
+}
+
+.ztelier-card--elevated {
+  box-shadow: var(--ztelier-shadow-sm);
+  border-color: transparent;
+}
+
+.ztelier-card__title {
+  font-size: var(--ztelier-font-lg);
+  font-weight: 700;
+  color: var(--ztelier-deep);
+  margin: 0 0 var(--ztelier-space-3) 0;
+  letter-spacing: -0.01em;
+}
+
+.ztelier-card__subtitle {
+  font-size: var(--ztelier-font-sm);
+  color: var(--ztelier-muted);
+  margin: 0 0 var(--ztelier-space-4) 0;
+}
+
+/* ==== Badges / Level Pills ==== */
+.ztelier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ztelier-space-1);
+  padding: 2px var(--ztelier-space-2);
+  border-radius: var(--ztelier-radius-sm);
+  font-size: var(--ztelier-font-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ztelier-badge--level-1 { background: var(--ztelier-danger-soft);  color: var(--ztelier-danger); }
+.ztelier-badge--level-2 { background: var(--ztelier-warning-soft); color: var(--ztelier-warning); }
+.ztelier-badge--level-3 { background: var(--ztelier-primary-soft); color: var(--ztelier-primary); }
+.ztelier-badge--level-4 { background: var(--ztelier-success-soft); color: var(--ztelier-success); }
+.ztelier-badge--muted   { background: var(--ztelier-surface-alt);  color: var(--ztelier-muted); }
+.ztelier-badge--accent  { background: var(--ztelier-accent-soft);  color: var(--ztelier-accent); }
+
+/* ==== Form Controls ==== */
+.ztelier-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ztelier-space-1);
+  margin-bottom: var(--ztelier-space-4);
+}
+
+.ztelier-field__label {
+  font-size: var(--ztelier-font-sm);
+  font-weight: 600;
+  color: var(--ztelier-ink);
+}
+
+.ztelier-field__hint {
+  font-size: var(--ztelier-font-xs);
+  color: var(--ztelier-muted);
+}
+
+.ztelier-input,
+.ztelier-select,
+.ztelier-textarea {
+  width: 100%;
+  padding: var(--ztelier-space-2) var(--ztelier-space-3);
+  border: 1px solid var(--ztelier-muted-soft);
+  border-radius: var(--ztelier-radius);
+  background: var(--ztelier-surface-white);
+  color: var(--ztelier-ink);
+  font-family: inherit;
+  font-size: var(--ztelier-font-base);
+  transition: border-color var(--ztelier-transition-fast), box-shadow var(--ztelier-transition-fast);
+}
+
+.ztelier-input:focus,
+.ztelier-select:focus,
+.ztelier-textarea:focus {
+  outline: none;
+  border-color: var(--ztelier-primary);
+  box-shadow: var(--ztelier-focus-ring);
+}
+
+.ztelier-input[aria-invalid="true"] {
+  border-color: var(--ztelier-danger);
+}
+
+/* ==== Data Table ==== */
+.ztelier-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--ztelier-font-base);
+}
+
+.ztelier-table thead th {
+  background: var(--ztelier-surface-alt);
+  color: var(--ztelier-deep);
+  font-weight: 600;
+  font-size: var(--ztelier-font-sm);
+  letter-spacing: 0.02em;
+  padding: var(--ztelier-space-2) var(--ztelier-space-3);
+  border-bottom: 2px solid var(--ztelier-deep);
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ztelier-table tbody td {
+  padding: var(--ztelier-space-2) var(--ztelier-space-3);
+  border-bottom: 1px solid var(--ztelier-muted-soft);
+  vertical-align: top;
+}
+
+.ztelier-table tbody tr:hover {
+  background: var(--ztelier-surface-alt);
+}
+
+/* ==== Metric Value (数値表示) ==== */
+.ztelier-metric {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ztelier-deep);
+}
+.ztelier-metric--lg  { font-size: var(--ztelier-font-xl); }
+.ztelier-metric--xl  { font-size: var(--ztelier-font-2xl); }
+
+/* ==== Section Divider ==== */
+.ztelier-section {
+  padding: var(--ztelier-space-8) 0;
+  border-bottom: 1px solid var(--ztelier-muted-soft);
+}
+.ztelier-section:last-child { border-bottom: none; }
+
+.ztelier-section__title {
+  font-size: var(--ztelier-font-md);
+  font-weight: 700;
+  color: var(--ztelier-deep);
+  margin: 0 0 var(--ztelier-space-4) 0;
+  padding-bottom: var(--ztelier-space-1);
+  border-bottom: 2px solid var(--ztelier-primary);
+  display: inline-block;
+  letter-spacing: -0.01em;
+}
+
+/* ==== Alert / Callout ==== */
+.ztelier-alert {
+  padding: var(--ztelier-space-3) var(--ztelier-space-4);
+  border-left: 3px solid var(--ztelier-muted);
+  border-radius: var(--ztelier-radius);
+  background: var(--ztelier-surface-alt);
+  font-size: var(--ztelier-font-sm);
+  line-height: var(--ztelier-leading-normal);
+}
+
+.ztelier-alert--info    { border-left-color: var(--ztelier-primary); background: var(--ztelier-primary-soft); }
+.ztelier-alert--success { border-left-color: var(--ztelier-success); background: var(--ztelier-success-soft); }
+.ztelier-alert--warning { border-left-color: var(--ztelier-warning); background: var(--ztelier-warning-soft); }
+.ztelier-alert--danger  { border-left-color: var(--ztelier-danger);  background: var(--ztelier-danger-soft); }
+.ztelier-alert--accent  { border-left-color: var(--ztelier-accent);  background: var(--ztelier-accent-soft); }
+
+/* ------------------------------------------------------------------
+ * Header / Footer（Web Component 無しでも使える素のクラス）
+ * ------------------------------------------------------------------ */
+.ztelier-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ztelier-space-2);
+  padding: var(--ztelier-space-2) var(--ztelier-space-4);
+  background: var(--ztelier-deep);
+  color: #fff;
+  font-size: var(--ztelier-font-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.ztelier-header__brand {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ztelier-header__separator {
+  opacity: 0.5;
+  margin: 0 var(--ztelier-space-1);
+}
+
+.ztelier-header__tool {
+  font-weight: 400;
+  opacity: 0.9;
+}
+
+.ztelier-header__version {
+  font-family: var(--ztelier-font-mono);
+  font-size: var(--ztelier-font-xs);
+  opacity: 0.7;
+  margin-left: var(--ztelier-space-2);
+}
+
+.ztelier-footer {
+  padding: var(--ztelier-space-4) var(--ztelier-space-6);
+  background: var(--ztelier-surface-alt);
+  border-top: 1px solid var(--ztelier-muted-soft);
+  color: var(--ztelier-muted);
+  font-size: var(--ztelier-font-xs);
+  text-align: center;
+  line-height: var(--ztelier-leading-normal);
+}
+
+.ztelier-footer__disclaimer {
+  font-weight: 600;
+  color: var(--ztelier-ink);
+  margin-bottom: var(--ztelier-space-1);
+}
+
+.ztelier-footer__frameworks {
+  color: var(--ztelier-muted);
+}
+
+/* ------------------------------------------------------------------
+ * Accessibility: reduced-motion
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Print
+ * ------------------------------------------------------------------ */
+@media print {
+  .ztelier-header {
+    background: #fff !important;
+    color: var(--ztelier-ink) !important;
+    border-bottom: 2px solid var(--ztelier-deep);
+  }
+  .ztelier-footer {
+    background: #fff !important;
+    border-top: 1px solid var(--ztelier-muted);
+  }
+  .ztelier-no-print { display: none !important; }
+  .ztelier-table { page-break-inside: avoid; }
+  .ztelier-section { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+}
+
+</style>
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .demo-main {
+      max-width: 1000px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--ztelier-space-6) var(--ztelier-space-6) var(--ztelier-space-12);
+      flex: 1;
+    }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: var(--ztelier-space-4);
+    }
+    .swatch {
+      padding: var(--ztelier-space-4);
+      border-radius: var(--ztelier-radius);
+      border: 1px solid var(--ztelier-muted-soft);
+      background: var(--ztelier-surface-white);
+    }
+    .swatch__chip {
+      width: 100%;
+      height: 48px;
+      border-radius: var(--ztelier-radius-sm);
+      margin-bottom: var(--ztelier-space-2);
+      border: 1px solid var(--ztelier-muted-soft);
+    }
+    .swatch__name {
+      font-size: var(--ztelier-font-sm);
+      font-weight: 600;
+      color: var(--ztelier-ink);
+    }
+    .swatch__hex {
+      font-family: var(--ztelier-font-mono);
+      font-size: var(--ztelier-font-xs);
+      color: var(--ztelier-muted);
+    }
+    pre {
+      background: var(--ztelier-deep);
+      color: #E3EEFE;
+      padding: var(--ztelier-space-4);
+      border-radius: var(--ztelier-radius);
+      font-family: var(--ztelier-font-mono);
+      font-size: var(--ztelier-font-xs);
+      line-height: 1.5;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .row { display: flex; gap: var(--ztelier-space-2); flex-wrap: wrap; align-items: center; }
+    h2.ztelier-section__title { margin-top: 0; }
+  </style>
+</head>
+<body class="ztelier-scope">
+
+  <!-- Web Component での使用例 -->
+  <ztelier-header tool-name="Common Kit Demo" tool-version="v1.0.0" tool-color="#B8895E"></ztelier-header>
+
+  <main class="demo-main">
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">1. カラーパレット</h2>
+      <p style="color: var(--ztelier-muted); font-size: var(--ztelier-font-sm);">
+        60-30-10の法則：60% Paper+Charcoal、30% Blue/Navy、10% Sage
+      </p>
+
+      <div class="demo-grid" style="margin-top: var(--ztelier-space-4);">
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-primary);"></div>
+          <div class="swatch__name">Zscaler Blue (Primary)</div>
+          <div class="swatch__hex">#246CF7</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-deep);"></div>
+          <div class="swatch__name">Zscaler Navy (Deep)</div>
+          <div class="swatch__hex">#001744</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-accent);"></div>
+          <div class="swatch__name">Sage (Accent)</div>
+          <div class="swatch__hex">#7BA05B</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-surface);"></div>
+          <div class="swatch__name">Paper (Surface)</div>
+          <div class="swatch__hex">#F7F9FB</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-ink);"></div>
+          <div class="swatch__name">Charcoal (Ink)</div>
+          <div class="swatch__hex">#2A2D34</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__chip" style="background: var(--ztelier-muted);"></div>
+          <div class="swatch__name">Stone (Muted)</div>
+          <div class="swatch__hex">#8A8F98</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: var(--ztelier-font-md); margin-top: var(--ztelier-space-8); margin-bottom: var(--ztelier-space-3);">状態色 / 成熟度レベル</h3>
+      <div class="row">
+        <span class="ztelier-badge ztelier-badge--level-1">Level 1 / Traditional</span>
+        <span class="ztelier-badge ztelier-badge--level-2">Level 2 / Initial</span>
+        <span class="ztelier-badge ztelier-badge--level-3">Level 3 / Advanced</span>
+        <span class="ztelier-badge ztelier-badge--level-4">Level 4 / Optimal</span>
+        <span class="ztelier-badge ztelier-badge--muted">未評価</span>
+        <span class="ztelier-badge ztelier-badge--accent">Ztelier固有</span>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">2. ボタン・アラート</h2>
+      <div class="row" style="margin-bottom: var(--ztelier-space-4);">
+        <button class="ztelier-btn ztelier-btn--primary">Primary</button>
+        <button class="ztelier-btn ztelier-btn--secondary">Secondary</button>
+        <button class="ztelier-btn ztelier-btn--ghost">Ghost</button>
+        <button class="ztelier-btn ztelier-btn--accent">Accent (Sage)</button>
+        <button class="ztelier-btn ztelier-btn--danger">Danger</button>
+        <button class="ztelier-btn ztelier-btn--primary" disabled>Disabled</button>
+      </div>
+
+      <div class="ztelier-alert ztelier-alert--info" style="margin-bottom: var(--ztelier-space-2);">
+        <strong>ℹ️ 左「Governance (ZTMM)」と右「Govern (CSF)」は関連しますが別物です。</strong>
+        左はZT実装そのものの統制、右は組織全体のセキュリティ戦略統制。
+      </div>
+      <div class="ztelier-alert ztelier-alert--warning" style="margin-bottom: var(--ztelier-space-2);">
+        組織摩擦未評価のため、実効到達時期は評価できません（Forg未入力時の挙動）。
+      </div>
+      <div class="ztelier-alert ztelier-alert--accent">
+        セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります。
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">3. フォーム入力</h2>
+      <div style="max-width: 480px;">
+        <div class="ztelier-field">
+          <label class="ztelier-field__label" for="demo-company">顧客企業名</label>
+          <span class="ztelier-field__hint">診断結果のファイル名にも使用されます</span>
+          <input class="ztelier-input" id="demo-company" type="text" placeholder="株式会社サンプル">
+        </div>
+        <div class="ztelier-field">
+          <label class="ztelier-field__label" for="demo-industry">業種</label>
+          <select class="ztelier-select" id="demo-industry">
+            <option value="">-- 選択 --</option>
+            <option value="manufacturing">製造業</option>
+            <option value="financial_services">金融サービス</option>
+            <option value="retail">小売</option>
+            <option value="healthcare">ヘルスケア</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">4. データテーブル</h2>
+      <div style="overflow-x: auto;">
+        <table class="ztelier-table">
+          <thead>
+            <tr>
+              <th>ツール</th>
+              <th>役割</th>
+              <th>ブランド基準</th>
+              <th>顧客対面</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Forg</td><td>組織摩擦診断</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>MAAZ</td><td>ZTMM×MITRE 技術評価</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>Amplify</td><td>ユースケースマッピング</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>PUPY Uplift</td><td>戦略価格（内部限定）</td><td><span class="ztelier-badge ztelier-badge--muted">内部品質</span></td><td>❌</td></tr>
+            <tr><td>Endeavor</td><td>ROIエグゼクティブダッシュボード</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+            <tr><td>Showtoku</td><td>NIST CSF 2.0/AI RMF 評価</td><td><span class="ztelier-badge ztelier-badge--level-4">顧客品質</span></td><td>✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">5. Metric / Score 表示</h2>
+      <div class="ztelier-card ztelier-card--elevated" style="max-width: 420px;">
+        <div class="ztelier-card__subtitle">組織摩擦係数（Forg F値）</div>
+        <div class="ztelier-metric ztelier-metric--xl">0.38</div>
+        <div style="display: flex; gap: var(--ztelier-space-2); margin-top: var(--ztelier-space-2); align-items: center;">
+          <span class="ztelier-badge ztelier-badge--level-2">業界平均 0.52</span>
+          <span style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted);">-0.14（要改善）</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <section class="ztelier-section">
+      <h2 class="ztelier-section__title">6. Context I/O デモ</h2>
+      <p style="color: var(--ztelier-muted); font-size: var(--ztelier-font-sm); margin-bottom: var(--ztelier-space-4);">
+        Loader / Writer / Migrate の動作確認。localStorage を使うので、開いたタブ内で完結します。
+      </p>
+
+      <div class="row" style="margin-bottom: var(--ztelier-space-4);">
+        <button class="ztelier-btn ztelier-btn--primary" id="btn-create">新規セッション作成</button>
+        <button class="ztelier-btn ztelier-btn--secondary" id="btn-update-forg">Forg結果を書き込み</button>
+        <button class="ztelier-btn ztelier-btn--secondary" id="btn-save">localStorage保存</button>
+        <button class="ztelier-btn ztelier-btn--secondary" id="btn-load">localStorage読込</button>
+        <button class="ztelier-btn ztelier-btn--accent" id="btn-export">JSONダウンロード</button>
+        <button class="ztelier-btn ztelier-btn--ghost" id="btn-validate">バリデーション</button>
+        <button class="ztelier-btn ztelier-btn--danger" id="btn-clear">削除</button>
+      </div>
+
+      <pre id="context-viewer">（まだ何も表示されていません）</pre>
+    </section>
+
+  </main>
+
+  <!-- Web Component フッター -->
+  <ztelier-footer
+    frameworks="MITRE ATT&CK, MITRE ATLAS, CISA ZTMM v2, NIST CSF 2.0"
+    about-text="Zscaler Japanのアーキテクトが業務効率化のために個人的に立て付けた内部ツール群">
+  </ztelier-footer>
+
+  <!-- スクリプト読み込み -->
+  <script>
+/**
+ * Ztelier Common Kit — Header Component
+ * v1.0.0 (2026-04-17)
+ *
+ * 顧客画面に常時表示される小型ヘッダー。
+ * 設計書 Phase 1 準拠：「Ztelier | ToolName vX.Y.Z」を左上に小さく表示。
+ *
+ * 使い方（Web Component）:
+ *   <ztelier-header tool-name="MAAZ" tool-version="v4.2.0"></ztelier-header>
+ *
+ * 使い方（プレーン関数）:
+ *   ZtelierHeader.render(document.getElementById('header-slot'), {
+ *     toolName: 'MAAZ',
+ *     toolVersion: 'v4.2.0',
+ *     toolColor: '#001744'   // 省略可：ツールアイコン色
+ *   });
+ *
+ * 注意：
+ *   - Shadow DOM は使わず Light DOM で実装。ztelier-tokens.css の変数を継承する。
+ *   - ツール名に "Zscaler" を冠さない（責任分界点の担保）。
+ *   - ロゴは使わない。テキストと色のみで構成。
+ */
+
+(function (global, factory) {
+  // UMD: ESM / CommonJS / グローバルの3形態対応
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    global.ZtelierHeader = factory();
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  /**
+   * 属性の正規化。タグ属性（kebab-case）とオプション（camelCase）を統一。
+   * @param {HTMLElement|Object} source
+   * @returns {{toolName: string, toolVersion: string, toolColor: string|null, aboutUrl: string|null}}
+   */
+  function normalizeOptions(source) {
+    const getter = source instanceof HTMLElement
+      ? (name) => source.getAttribute(name)
+      : (name) => {
+          // camelCase 変換：tool-name → toolName
+          const key = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+          return source[key] != null ? String(source[key]) : null;
+        };
+
+    return {
+      toolName:    getter('tool-name')    || 'Ztelier',
+      toolVersion: getter('tool-version') || '',
+      toolColor:   getter('tool-color')   || null,     // 指定あればドットを描画
+      aboutUrl:    getter('about-url')    || null      // 指定あれば About リンク表示
+    };
+  }
+
+  /**
+   * ヘッダー HTML を生成。XSS 対策のため textContent 経由で値を挿入する。
+   * @param {HTMLElement} mount - 挿入先 DOM 要素
+   * @param {Object} opts
+   */
+  function render(mount, opts) {
+    if (!mount) throw new Error('[ZtelierHeader] mount element is required');
+    const o = normalizeOptions(opts || {});
+
+    // クラス付与（既存クラスを壊さずに追加）
+    mount.classList.add('ztelier-header');
+
+    // 子要素をクリア
+    mount.replaceChildren();
+
+    // Ztelier ブランド部
+    const brand = document.createElement('span');
+    brand.className = 'ztelier-header__brand';
+    brand.textContent = 'Ztelier';
+    mount.appendChild(brand);
+
+    // ツール名がある場合のみ区切りとツール名を表示
+    if (o.toolName && o.toolName !== 'Ztelier') {
+      // ツール色ドット（指定あれば）
+      if (o.toolColor) {
+        const dot = document.createElement('span');
+        dot.setAttribute('aria-hidden', 'true');
+        dot.style.cssText = [
+          'display:inline-block',
+          'width:8px',
+          'height:8px',
+          'border-radius:50%',
+          'margin-left:8px',
+          'background:' + o.toolColor
+        ].join(';');
+        mount.appendChild(dot);
+      }
+
+      const sep = document.createElement('span');
+      sep.className = 'ztelier-header__separator';
+      sep.textContent = '|';
+      sep.setAttribute('aria-hidden', 'true');
+      mount.appendChild(sep);
+
+      const tool = document.createElement('span');
+      tool.className = 'ztelier-header__tool';
+      tool.textContent = o.toolName;
+      mount.appendChild(tool);
+
+      if (o.toolVersion) {
+        const ver = document.createElement('span');
+        ver.className = 'ztelier-header__version';
+        ver.textContent = o.toolVersion;
+        mount.appendChild(ver);
+      }
+    }
+
+    // 右側のスロット（About リンク等）
+    if (o.aboutUrl) {
+      const spacer = document.createElement('span');
+      spacer.style.cssText = 'flex:1';
+      mount.appendChild(spacer);
+
+      const about = document.createElement('a');
+      about.href = o.aboutUrl;
+      about.textContent = 'About';
+      about.style.cssText = [
+        'color:inherit',
+        'opacity:0.8',
+        'text-decoration:none',
+        'font-size:var(--ztelier-font-xs)',
+        'border-bottom:1px dotted currentColor',
+        'padding-bottom:1px'
+      ].join(';');
+      about.setAttribute('aria-label', 'About Ztelier');
+      mount.appendChild(about);
+    }
+
+    // ARIA
+    mount.setAttribute('role', 'banner');
+    mount.setAttribute('aria-label', 'Ztelier ヘッダー');
+  }
+
+  /**
+   * Web Component 定義
+   * - Light DOM（ztelier-tokens.css の変数を継承）
+   * - 属性変更に追従
+   */
+  class ZtelierHeaderElement extends HTMLElement {
+    static get observedAttributes() {
+      return ['tool-name', 'tool-version', 'tool-color', 'about-url'];
+    }
+
+    connectedCallback() {
+      this._render();
+    }
+
+    attributeChangedCallback() {
+      if (this.isConnected) this._render();
+    }
+
+    _render() {
+      render(this, {
+        toolName:    this.getAttribute('tool-name'),
+        toolVersion: this.getAttribute('tool-version'),
+        toolColor:   this.getAttribute('tool-color'),
+        aboutUrl:    this.getAttribute('about-url')
+      });
+    }
+  }
+
+  // 重複登録回避（複数ツールで同一スクリプトを読んでも安全）
+  if (typeof customElements !== 'undefined' && !customElements.get('ztelier-header')) {
+    customElements.define('ztelier-header', ZtelierHeaderElement);
+  }
+
+  return {
+    render,
+    Element: ZtelierHeaderElement,
+    version: '1.0.0'
+  };
+}));
+
+</script>
+  <script>
+/**
+ * Ztelier Common Kit — Footer Component
+ * v1.0.0 (2026-04-17)
+ *
+ * 設計書 Phase 1 の責任分界点担保のための必須コンポーネント。
+ *   - 常時 "Ztelier – Independent assessment utility" を表示
+ *   - 準拠フレームワーク（MITRE ATT&CK/ATLAS, CISA ZTMM v2, NIST CSF 2.0）を出典明記
+ *
+ * 使い方（Web Component）:
+ *   <ztelier-footer frameworks="MITRE ATT&CK/ATLAS, CISA ZTMM v2, NIST CSF 2.0"></ztelier-footer>
+ *
+ * 使い方（プレーン関数）:
+ *   ZtelierFooter.render(document.getElementById('footer-slot'), {
+ *     frameworks: ['MITRE ATT&CK', 'MITRE ATLAS', 'CISA ZTMM v2', 'NIST CSF 2.0'],
+ *     philosophy: true  // 「セキュリティ対策は手段です」脚注を表示
+ *   });
+ */
+
+(function (global, factory) {
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    global.ZtelierFooter = factory();
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const DEFAULT_DISCLAIMER = 'Ztelier – Independent assessment utility';
+  const DEFAULT_PHILOSOPHY = 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります。';
+  const DEFAULT_FRAMEWORKS = ['MITRE ATT&CK', 'MITRE ATLAS', 'CISA ZTMM v2', 'NIST CSF 2.0'];
+
+  /**
+   * オプション正規化
+   */
+  function normalizeOptions(source) {
+    const getter = source instanceof HTMLElement
+      ? (name) => source.getAttribute(name)
+      : (name) => {
+          const key = name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+          return source[key] != null ? source[key] : null;
+        };
+
+    let frameworks = getter('frameworks');
+    if (typeof frameworks === 'string') {
+      frameworks = frameworks.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (!Array.isArray(frameworks)) {
+      frameworks = DEFAULT_FRAMEWORKS;
+    }
+
+    const philosophyAttr = getter('philosophy');
+    const philosophy = philosophyAttr === null
+      ? true
+      : (philosophyAttr === 'false' || philosophyAttr === false ? false : true);
+
+    return {
+      disclaimer: getter('disclaimer') || DEFAULT_DISCLAIMER,
+      philosophy,
+      frameworks,
+      aboutText: getter('about-text') || null  // Zscaler Japan立て付けの説明
+    };
+  }
+
+  /**
+   * フッターレンダリング
+   */
+  function render(mount, opts) {
+    if (!mount) throw new Error('[ZtelierFooter] mount element is required');
+    const o = normalizeOptions(opts || {});
+
+    mount.classList.add('ztelier-footer');
+    mount.replaceChildren();
+
+    // 思想脚注（上段）— 設計書「プロジェクトを貫く5つの思想」①
+    if (o.philosophy) {
+      const philo = document.createElement('div');
+      philo.textContent = DEFAULT_PHILOSOPHY;
+      philo.style.cssText = [
+        'font-style:italic',
+        'color:var(--ztelier-ink)',
+        'margin-bottom:var(--ztelier-space-2)',
+        'font-size:var(--ztelier-font-xs)'
+      ].join(';');
+      mount.appendChild(philo);
+    }
+
+    // 責任分界ディスクレーマー（最重要）
+    const disc = document.createElement('div');
+    disc.className = 'ztelier-footer__disclaimer';
+    disc.textContent = o.disclaimer;
+    mount.appendChild(disc);
+
+    // 任意の立て付け説明
+    if (o.aboutText) {
+      const about = document.createElement('div');
+      about.textContent = o.aboutText;
+      about.style.cssText = 'font-size:var(--ztelier-font-xs);color:var(--ztelier-muted);margin-top:2px';
+      mount.appendChild(about);
+    }
+
+    // 準拠フレームワーク
+    if (o.frameworks && o.frameworks.length > 0) {
+      const fw = document.createElement('div');
+      fw.className = 'ztelier-footer__frameworks';
+      fw.textContent = 'Based on ' + o.frameworks.join(', ');
+      mount.appendChild(fw);
+    }
+
+    // ARIA
+    mount.setAttribute('role', 'contentinfo');
+    mount.setAttribute('aria-label', 'Ztelier フッター（責任分界・出典）');
+  }
+
+  /**
+   * Web Component
+   */
+  class ZtelierFooterElement extends HTMLElement {
+    static get observedAttributes() {
+      return ['frameworks', 'disclaimer', 'philosophy', 'about-text'];
+    }
+
+    connectedCallback() {
+      this._render();
+    }
+
+    attributeChangedCallback() {
+      if (this.isConnected) this._render();
+    }
+
+    _render() {
+      render(this, {
+        frameworks: this.getAttribute('frameworks'),
+        disclaimer: this.getAttribute('disclaimer'),
+        philosophy: this.getAttribute('philosophy'),
+        aboutText:  this.getAttribute('about-text')
+      });
+    }
+  }
+
+  if (typeof customElements !== 'undefined' && !customElements.get('ztelier-footer')) {
+    customElements.define('ztelier-footer', ZtelierFooterElement);
+  }
+
+  return {
+    render,
+    Element: ZtelierFooterElement,
+    DEFAULT_DISCLAIMER,
+    DEFAULT_PHILOSOPHY,
+    DEFAULT_FRAMEWORKS,
+    version: '1.0.0'
+  };
+}));
+
+</script>
+  <script>
+/**
+ * Ztelier Common Kit — Context Loader
+ * v1.0.0 (2026-04-17)
+ *
+ * ztelier-context.json の読み込みと軽量バリデーションを提供。
+ * - localStorage（セッション継続）
+ * - ファイルアップロード（別会場 / 他端末 からの持込）
+ * - 空テンプレート生成（新規セッション開始）
+ *
+ * 依存なし。ブラウザ標準API（localStorage / File API）のみ使用。
+ *
+ * 使い方:
+ *   // 既存セッション読み込み
+ *   const ctx = ZtelierContext.load('aw-20260417-company-a');
+ *
+ *   // 空テンプレート
+ *   const ctx = ZtelierContext.empty({ session_id: 'aw-...', company_name: '...' });
+ *
+ *   // ファイルから読込
+ *   const ctx = await ZtelierContext.loadFromFile(fileInput.files[0]);
+ *
+ *   // バリデーション（エラーがあれば配列で返る、空配列ならOK）
+ *   const errors = ZtelierContext.validate(ctx);
+ */
+
+(function (global, factory) {
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    // Writer との相互参照のため、既存の ZtelierContext があればマージ
+    global.ZtelierContext = Object.assign({}, global.ZtelierContext || {}, factory());
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const SCHEMA_VERSION   = '1.0.0';
+  const ZTELIER_VERSION  = '1.0.0';
+  const STORAGE_PREFIX   = 'ztelier-context:';   // localStorage キー接頭辞
+  const STORAGE_INDEX    = 'ztelier-context:__index__';  // セッションID一覧
+
+  // ============================================================
+  // Empty / Seed
+  // ============================================================
+
+  /**
+   * 空の Ztelier Context を生成する。
+   * @param {{session_id?: string, company_name?: string, created_by?: string}} [seed]
+   * @returns {Object} 空テンプレート
+   */
+  function empty(seed) {
+    const now = new Date().toISOString();
+    const sessionId = (seed && seed.session_id) || _generateSessionId(seed && seed.company_name);
+
+    return {
+      meta: {
+        schema_version: SCHEMA_VERSION,
+        ztelier_version: ZTELIER_VERSION,
+        session_id: sessionId,
+        created_at: now,
+        updated_at: now,
+        created_by: (seed && seed.created_by) || null
+      },
+      customer: {
+        company_name: (seed && seed.company_name) || '',
+        industry: null,
+        industry_label: null,
+        employee_count_range: null,
+        annual_revenue_range: null,
+        headquarters_location: null,
+        current_zscaler_status: null,
+        aw_context: null
+      },
+      amplify:  { completed: false },
+      maaz:     { completed: false },
+      showtoku: { completed: false },
+      forg:     { completed: false },
+      endeavor: { completed: false }
+    };
+  }
+
+  function _generateSessionId(companyName) {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const slug = (companyName || 'unnamed')
+      .toLowerCase()
+      .replace(/[^a-z0-9ぁ-んァ-ヶ一-龠]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'unnamed';
+    return `aw-${yyyy}${mm}${dd}-${slug}`;
+  }
+
+  // ============================================================
+  // LocalStorage I/O
+  // ============================================================
+
+  /**
+   * localStorage から Context を読み込む。
+   * 存在しない場合は null を返す。
+   * @param {string} sessionId
+   * @returns {Object|null}
+   */
+  function load(sessionId) {
+    if (!sessionId) throw new Error('[ZtelierContext.load] sessionId is required');
+    try {
+      const raw = localStorage.getItem(STORAGE_PREFIX + sessionId);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      console.error('[ZtelierContext.load] failed:', e);
+      return null;
+    }
+  }
+
+  /**
+   * localStorage 保存済みの全セッションIDを返す。
+   * @returns {string[]}
+   */
+  function listSessions() {
+    try {
+      const raw = localStorage.getItem(STORAGE_INDEX);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      // インデックス破損時は個別キーから再構築
+      const result = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(STORAGE_PREFIX) && k !== STORAGE_INDEX) {
+          result.push(k.slice(STORAGE_PREFIX.length));
+        }
+      }
+      return result;
+    }
+  }
+
+  // ============================================================
+  // File I/O
+  // ============================================================
+
+  /**
+   * File オブジェクト（<input type="file">）から Context を読み込む。
+   * @param {File} file
+   * @returns {Promise<Object>}
+   */
+  function loadFromFile(file) {
+    if (!file) return Promise.reject(new Error('[ZtelierContext.loadFromFile] file is required'));
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const ctx = JSON.parse(String(reader.result));
+          const errors = validate(ctx);
+          if (errors.length > 0) {
+            const summary = errors.slice(0, 3).map(e => `- ${e.path}: ${e.message}`).join('
+');
+            console.warn(`[ZtelierContext.loadFromFile] ${errors.length} validation issues:
+${summary}`);
+          }
+          resolve(ctx);
+        } catch (e) {
+          reject(new Error(`JSON parse failed: ${e.message}`));
+        }
+      };
+      reader.onerror = () => reject(new Error('File read failed'));
+      reader.readAsText(file, 'utf-8');
+    });
+  }
+
+  // ============================================================
+  // Validation（軽量版 — ajv 不要で動く）
+  // ============================================================
+
+  /**
+   * 必須フィールドと型の基本チェック。
+   * 厳密なスキーマ検証は ajv で別途行う想定。
+   * @param {any} ctx
+   * @returns {Array<{path: string, message: string}>}
+   */
+  function validate(ctx) {
+    const errors = [];
+
+    if (!ctx || typeof ctx !== 'object') {
+      return [{ path: '', message: 'ctx must be an object' }];
+    }
+
+    // meta
+    if (!ctx.meta || typeof ctx.meta !== 'object') {
+      errors.push({ path: 'meta', message: 'required' });
+    } else {
+      if (!ctx.meta.schema_version) errors.push({ path: 'meta.schema_version', message: 'required' });
+      if (!ctx.meta.ztelier_version) errors.push({ path: 'meta.ztelier_version', message: 'required' });
+      if (!ctx.meta.session_id) errors.push({ path: 'meta.session_id', message: 'required' });
+      if (!ctx.meta.created_at) errors.push({ path: 'meta.created_at', message: 'required' });
+
+      if (ctx.meta.schema_version && ctx.meta.schema_version !== SCHEMA_VERSION) {
+        errors.push({
+          path: 'meta.schema_version',
+          message: `expected ${SCHEMA_VERSION}, got ${ctx.meta.schema_version}. Use ZtelierMigrate.migrate() first.`
+        });
+      }
+    }
+
+    // customer
+    if (!ctx.customer || typeof ctx.customer !== 'object') {
+      errors.push({ path: 'customer', message: 'required' });
+    } else if (!ctx.customer.company_name) {
+      errors.push({ path: 'customer.company_name', message: 'required' });
+    }
+
+    // 各ツールは completed フラグ必須
+    ['amplify', 'maaz', 'showtoku', 'forg', 'endeavor'].forEach(tool => {
+      if (ctx[tool] && typeof ctx[tool].completed !== 'boolean') {
+        errors.push({ path: `${tool}.completed`, message: 'must be boolean' });
+      }
+    });
+
+    // Forg F値の整合性（参考チェック）
+    if (ctx.forg && ctx.forg.completed && ctx.forg.variables) {
+      const v = ctx.forg.variables;
+      const computed = (v.S + v.L) / (v.C + v.L_prime);
+      if (ctx.forg.F_value != null && Math.abs(ctx.forg.F_value - computed) > 0.01) {
+        errors.push({
+          path: 'forg.F_value',
+          message: `inconsistent with variables: expected ${computed.toFixed(3)}, got ${ctx.forg.F_value}`
+        });
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * 特定ツールの結果が「使える状態」か判定。
+   * Endeavor が他ツール結果を参照するときに使用。
+   * @param {Object} ctx
+   * @param {string} toolName - 'amplify'|'maaz'|'showtoku'|'forg'|'endeavor'
+   * @returns {boolean}
+   */
+  function isToolReady(ctx, toolName) {
+    return !!(ctx && ctx[toolName] && ctx[toolName].completed === true);
+  }
+
+  // ============================================================
+  // Exports
+  // ============================================================
+
+  return {
+    // Constants
+    SCHEMA_VERSION,
+    ZTELIER_VERSION,
+    STORAGE_PREFIX,
+    STORAGE_INDEX,
+
+    // Core
+    empty,
+    load,
+    loadFromFile,
+    listSessions,
+    validate,
+    isToolReady,
+
+    version: '1.0.0'
+  };
+}));
+
+</script>
+  <script>
+/**
+ * Ztelier Common Kit — Context Writer
+ * v1.0.0 (2026-04-17)
+ *
+ * ztelier-context.json の書き込み・更新・エクスポートを提供。
+ *
+ * 使い方:
+ *   // 保存（updated_at 自動更新）
+ *   ZtelierContext.save(ctx);
+ *
+ *   // ツール単位の部分更新（設計書「読み書き責任」準拠）
+ *   ZtelierContext.updateTool(ctx, 'forg', { completed: true, F_value: 0.38, ... });
+ *   ZtelierContext.save(ctx);
+ *
+ *   // ファイルとしてダウンロード
+ *   ZtelierContext.exportToFile(ctx);  // ファイル名は session_id から自動
+ *
+ *   // セッション削除
+ *   ZtelierContext.remove(sessionId);
+ */
+
+(function (global, factory) {
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    global.ZtelierContext = Object.assign({}, global.ZtelierContext || {}, factory());
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const STORAGE_PREFIX = 'ztelier-context:';
+  const STORAGE_INDEX  = 'ztelier-context:__index__';
+
+  // ============================================================
+  // Save / Remove
+  // ============================================================
+
+  /**
+   * localStorage に保存。updated_at を自動更新し、インデックスにも追加。
+   * @param {Object} ctx
+   * @returns {Object} 保存された ctx（updated_at 更新済み）
+   */
+  function save(ctx) {
+    if (!ctx || !ctx.meta || !ctx.meta.session_id) {
+      throw new Error('[ZtelierContext.save] ctx.meta.session_id is required');
+    }
+
+    ctx.meta.updated_at = new Date().toISOString();
+
+    const key = STORAGE_PREFIX + ctx.meta.session_id;
+    try {
+      localStorage.setItem(key, JSON.stringify(ctx));
+      _addToIndex(ctx.meta.session_id);
+    } catch (e) {
+      // QuotaExceededError 等
+      if (e.name === 'QuotaExceededError') {
+        throw new Error('[ZtelierContext.save] localStorage quota exceeded. Consider cleaning old sessions.');
+      }
+      throw e;
+    }
+
+    return ctx;
+  }
+
+  /**
+   * セッション削除
+   * @param {string} sessionId
+   */
+  function remove(sessionId) {
+    if (!sessionId) throw new Error('[ZtelierContext.remove] sessionId is required');
+    localStorage.removeItem(STORAGE_PREFIX + sessionId);
+    _removeFromIndex(sessionId);
+  }
+
+  function _addToIndex(sessionId) {
+    try {
+      const raw = localStorage.getItem(STORAGE_INDEX);
+      const arr = raw ? JSON.parse(raw) : [];
+      if (!arr.includes(sessionId)) {
+        arr.push(sessionId);
+        localStorage.setItem(STORAGE_INDEX, JSON.stringify(arr));
+      }
+    } catch (e) {
+      // インデックス失敗でもメイン保存は成功しているので無視
+      console.warn('[ZtelierContext] failed to update session index:', e);
+    }
+  }
+
+  function _removeFromIndex(sessionId) {
+    try {
+      const raw = localStorage.getItem(STORAGE_INDEX);
+      if (!raw) return;
+      const arr = JSON.parse(raw).filter(id => id !== sessionId);
+      localStorage.setItem(STORAGE_INDEX, JSON.stringify(arr));
+    } catch (e) {
+      console.warn('[ZtelierContext] failed to update session index:', e);
+    }
+  }
+
+  // ============================================================
+  // Partial Update
+  // ============================================================
+
+  /**
+   * ツール単位の結果を更新。深いマージを行わず、ツールセクション全体を差し替える。
+   * 設計書「読み書き責任」準拠：各ツールは自セクションのみ書き込む。
+   *
+   * @param {Object} ctx
+   * @param {'amplify'|'maaz'|'showtoku'|'forg'|'endeavor'|'customer'} section
+   * @param {Object} data
+   * @returns {Object} 更新後の ctx（参照は同じ）
+   */
+  function updateTool(ctx, section, data) {
+    const validSections = ['amplify', 'maaz', 'showtoku', 'forg', 'endeavor', 'customer'];
+    if (!validSections.includes(section)) {
+      throw new Error(`[ZtelierContext.updateTool] invalid section: ${section}`);
+    }
+    if (!ctx || typeof ctx !== 'object') {
+      throw new Error('[ZtelierContext.updateTool] ctx must be an object');
+    }
+    if (!data || typeof data !== 'object') {
+      throw new Error('[ZtelierContext.updateTool] data must be an object');
+    }
+
+    ctx[section] = Object.assign({}, ctx[section] || {}, data);
+    ctx.meta.updated_at = new Date().toISOString();
+    return ctx;
+  }
+
+  /**
+   * パス指定での細粒度更新。ネストしたフィールドの変更に使う。
+   * 例: update(ctx, 'forg.variables.S', 0.45)
+   *
+   * @param {Object} ctx
+   * @param {string} path - ドット区切りパス
+   * @param {any} value
+   * @returns {Object} 更新後の ctx
+   */
+  function update(ctx, path, value) {
+    if (!path) throw new Error('[ZtelierContext.update] path is required');
+    const keys = path.split('.');
+    let cursor = ctx;
+
+    for (let i = 0; i < keys.length - 1; i++) {
+      const k = keys[i];
+      if (cursor[k] == null || typeof cursor[k] !== 'object') {
+        cursor[k] = {};
+      }
+      cursor = cursor[k];
+    }
+    cursor[keys[keys.length - 1]] = value;
+
+    if (ctx.meta) ctx.meta.updated_at = new Date().toISOString();
+    return ctx;
+  }
+
+  // ============================================================
+  // Export
+  // ============================================================
+
+  /**
+   * Context を JSON ファイルとしてダウンロードさせる。
+   * ファイル名は session_id ベース。
+   * @param {Object} ctx
+   * @param {string} [filename] - 省略時は "ztelier-context-<session_id>.json"
+   */
+  function exportToFile(ctx, filename) {
+    if (!ctx) throw new Error('[ZtelierContext.exportToFile] ctx is required');
+
+    const sessionId = (ctx.meta && ctx.meta.session_id) || 'unknown';
+    const name = filename || `ztelier-context-${sessionId}.json`;
+
+    const json = JSON.stringify(ctx, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+
+    // クリーンアップ（同期的な click 後でOK、次のマイクロタスクで解放）
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+
+    return name;
+  }
+
+  /**
+   * Context を Clipboard にコピー。
+   * @param {Object} ctx
+   * @returns {Promise<void>}
+   */
+  function copyToClipboard(ctx) {
+    if (!navigator.clipboard) {
+      return Promise.reject(new Error('Clipboard API not available'));
+    }
+    const json = JSON.stringify(ctx, null, 2);
+    return navigator.clipboard.writeText(json);
+  }
+
+  // ============================================================
+  // Exports
+  // ============================================================
+
+  return {
+    save,
+    remove,
+    update,
+    updateTool,
+    exportToFile,
+    copyToClipboard,
+    version: '1.0.0'
+  };
+}));
+
+</script>
+  <script>
+/**
+ * Ztelier Common Kit — Context Migration
+ * v1.0.0 (2026-04-17)
+ *
+ * スキーマバージョン間のマイグレーションを行う。
+ * 現時点では v1.0.0 のみ（no-op）。将来 v1.1.0 等が出た際に migrations[] に追加する。
+ *
+ * マイグレーションルール:
+ *   - 各 migration は純粋関数（入力を破壊しない）
+ *   - 上位バージョンは下位バージョンを全て通過することで到達（カスケード）
+ *   - 失敗時は例外を投げる（データ破損防止）
+ *
+ * 使い方:
+ *   const migrated = ZtelierMigrate.migrate(oldCtx);  // 最新版へ
+ *   const migrated = ZtelierMigrate.migrate(oldCtx, '1.1.0');  // 指定版へ
+ */
+
+(function (global, factory) {
+  if (typeof module === 'object' && typeof module.exports === 'object') {
+    module.exports = factory();
+  } else if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else {
+    global.ZtelierMigrate = factory();
+  }
+}(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  const LATEST_VERSION = '1.0.0';
+
+  /**
+   * マイグレーション定義。
+   * key = fromVersion, value = { to, fn(ctx) }
+   *
+   * 新バージョン追加手順:
+   *   1. 下の migrations に entry 追加
+   *   2. fn は副作用なしの純粋関数で書く
+   *   3. LATEST_VERSION を更新
+   *
+   * 例（将来の v1.1.0 追加時）:
+   *   '1.0.0': {
+   *     to: '1.1.0',
+   *     fn: (ctx) => {
+   *       const next = JSON.parse(JSON.stringify(ctx));
+   *       // ここで構造変換
+   *       next.meta.schema_version = '1.1.0';
+   *       return next;
+   *     }
+   *   }
+   */
+  const migrations = {
+    // 現時点では空。v1.0.0 が最新。
+  };
+
+  /**
+   * セマンティックバージョン比較。
+   * a < b → -1, a === b → 0, a > b → 1
+   */
+  function _compareVersion(a, b) {
+    const pa = a.split('.').map(Number);
+    const pb = b.split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+      if (pa[i] < pb[i]) return -1;
+      if (pa[i] > pb[i]) return 1;
+    }
+    return 0;
+  }
+
+  /**
+   * ctx を指定バージョンまでカスケードマイグレーション。
+   * @param {Object} ctx
+   * @param {string} [targetVersion=LATEST_VERSION]
+   * @returns {Object} 新しい ctx（元の ctx は変更されない）
+   */
+  function migrate(ctx, targetVersion) {
+    if (!ctx || !ctx.meta) {
+      throw new Error('[ZtelierMigrate] ctx.meta is required');
+    }
+
+    const target = targetVersion || LATEST_VERSION;
+    let current = ctx.meta.schema_version;
+
+    if (!current) {
+      throw new Error('[ZtelierMigrate] ctx.meta.schema_version is missing');
+    }
+
+    const cmp = _compareVersion(current, target);
+    if (cmp === 0) {
+      return ctx;  // 既に target と同じ
+    }
+    if (cmp > 0) {
+      throw new Error(
+        `[ZtelierMigrate] downgrade not supported: current=${current}, target=${target}`
+      );
+    }
+
+    // カスケード実行
+    let next = ctx;
+    const applied = [];
+    const guard = 100;  // 無限ループ防止
+    let steps = 0;
+
+    while (_compareVersion(next.meta.schema_version, target) < 0) {
+      if (steps++ > guard) {
+        throw new Error(`[ZtelierMigrate] migration cascade exceeded ${guard} steps`);
+      }
+
+      const from = next.meta.schema_version;
+      const migration = migrations[from];
+
+      if (!migration) {
+        throw new Error(
+          `[ZtelierMigrate] no migration path from ${from}. ` +
+          `Available: ${Object.keys(migrations).join(', ') || '(none)'}`
+        );
+      }
+
+      try {
+        next = migration.fn(next);
+        applied.push(`${from} → ${migration.to}`);
+      } catch (e) {
+        throw new Error(
+          `[ZtelierMigrate] migration ${from} → ${migration.to} failed: ${e.message}`
+        );
+      }
+
+      if (next.meta.schema_version !== migration.to) {
+        throw new Error(
+          `[ZtelierMigrate] migration ${from} → ${migration.to} did not update schema_version correctly ` +
+          `(got ${next.meta.schema_version})`
+        );
+      }
+    }
+
+    console.info('[ZtelierMigrate] applied:', applied.join(', '));
+    return next;
+  }
+
+  /**
+   * マイグレーションが必要か判定。
+   * @param {Object} ctx
+   * @param {string} [targetVersion]
+   * @returns {boolean}
+   */
+  function isMigrationNeeded(ctx, targetVersion) {
+    if (!ctx || !ctx.meta || !ctx.meta.schema_version) return false;
+    const target = targetVersion || LATEST_VERSION;
+    return _compareVersion(ctx.meta.schema_version, target) < 0;
+  }
+
+  /**
+   * 利用可能なマイグレーション一覧を返す（デバッグ用）
+   */
+  function listMigrations() {
+    return Object.keys(migrations).map(from => ({ from, to: migrations[from].to }));
+  }
+
+  return {
+    migrate,
+    isMigrationNeeded,
+    listMigrations,
+    LATEST_VERSION,
+    version: '1.0.0'
+  };
+}));
+
+</script>
+
+  <script>
+    // ============================================================
+    // Context I/O デモロジック
+    // ============================================================
+    const viewer = document.getElementById('context-viewer');
+    let currentCtx = null;
+
+    function render() {
+      viewer.textContent = currentCtx
+        ? JSON.stringify(currentCtx, null, 2)
+        : '（currentCtx は null）';
+    }
+
+    document.getElementById('btn-create').addEventListener('click', () => {
+      currentCtx = ZtelierContext.empty({
+        company_name: '株式会社デモ',
+        created_by: 'demo-user'
+      });
+      render();
+    });
+
+    document.getElementById('btn-update-forg').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      ZtelierContext.updateTool(currentCtx, 'forg', {
+        completed: true,
+        version: '4.3.0',
+        variables: { S: 0.45, L: 0.25, C: 0.70, L_prime: 0.60 },
+        F_value: 0.54,
+        industry_average_F: 0.52,
+        deviation_from_average: 0.02,
+        dominant_pattern: {
+          pattern_id: 'leadership_gap',
+          pattern_name_ja: 'Leadership Gap',
+          diagnosis_ja: '経営層の発信が現場に届いていない',
+          most_deviated_variable: 'L'
+        },
+        suggestion: {
+          action_ja: '次の全社発信でCEO自身が「守りたい事業・顧客・データ」を具体名で語る',
+          reference_framework: 'Kotter Step 1 (Urgency)',
+          common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
+        }
+      });
+      render();
+    });
+
+    document.getElementById('btn-save').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      ZtelierContext.save(currentCtx);
+      alert('localStorage に保存しました: ' + currentCtx.meta.session_id);
+    });
+
+    document.getElementById('btn-load').addEventListener('click', () => {
+      const sessions = ZtelierContext.listSessions();
+      if (sessions.length === 0) {
+        alert('保存済みセッションがありません');
+        return;
+      }
+      const pick = prompt('セッションIDを選択:\n' + sessions.join('\n'), sessions[0]);
+      if (!pick) return;
+      currentCtx = ZtelierContext.load(pick);
+      if (!currentCtx) { alert('見つかりませんでした'); return; }
+      render();
+    });
+
+    document.getElementById('btn-export').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      const name = ZtelierContext.exportToFile(currentCtx);
+      alert('ダウンロード: ' + name);
+    });
+
+    document.getElementById('btn-validate').addEventListener('click', () => {
+      if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      const errors = ZtelierContext.validate(currentCtx);
+      if (errors.length === 0) {
+        alert('✅ バリデーションOK（エラーなし）');
+      } else {
+        alert('⚠️ ' + errors.length + '件のエラー:\n' +
+          errors.map(e => `- ${e.path}: ${e.message}`).join('\n'));
+      }
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (!currentCtx) { alert('削除対象がありません'); return; }
+      if (!confirm(`セッション ${currentCtx.meta.session_id} を削除しますか？`)) return;
+      ZtelierContext.remove(currentCtx.meta.session_id);
+      currentCtx = null;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

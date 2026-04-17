@@ -1,0 +1,649 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ztelier.local/schemas/ztelier-context/1.0.0",
+  "title": "Ztelier Context",
+  "description": "Ztelier スイート全ツールが共有する単一セッションの評価コンテキスト。Amplify / MAAZ / Showtoku / Forg / Endeavor の結果を統一スキーマで保持する。設計書 v1.0 Phase 4 準拠。",
+  "type": "object",
+  "required": ["meta", "customer"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": { "$ref": "#/$defs/meta" },
+    "customer": { "$ref": "#/$defs/customer" },
+    "amplify": { "$ref": "#/$defs/amplify" },
+    "maaz": { "$ref": "#/$defs/maaz" },
+    "showtoku": { "$ref": "#/$defs/showtoku" },
+    "forg": { "$ref": "#/$defs/forg" },
+    "endeavor": { "$ref": "#/$defs/endeavor" }
+  },
+
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "description": "スキーマ・セッションのメタ情報。3層バージョニング（schema_version / ztelier_version / 各ツールversion）を担保。",
+      "required": ["schema_version", "ztelier_version", "session_id", "created_at"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "string",
+          "description": "このスキーマ定義のバージョン（SemVer）。",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "const": "1.0.0"
+        },
+        "ztelier_version": {
+          "type": "string",
+          "description": "Ztelier プロジェクト全体のバージョン（SemVer）。",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "session_id": {
+          "type": "string",
+          "description": "セッション識別子。推奨フォーマット: aw-YYYYMMDD-<customer-slug>",
+          "minLength": 1,
+          "maxLength": 128,
+          "examples": ["aw-20260417-company-a"]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "初期作成日時（ISO 8601、JST推奨）"
+        },
+        "updated_at": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "最終更新日時"
+        },
+        "created_by": {
+          "type": ["string", "null"],
+          "description": "作成者識別子（SE名等）",
+          "maxLength": 128
+        }
+      }
+    },
+
+    "customer": {
+      "type": "object",
+      "description": "顧客情報。全ツール共通参照。ShowtokuのICP判定、Endeavorの被害額算出にも使用。",
+      "required": ["company_name"],
+      "additionalProperties": false,
+      "properties": {
+        "company_name": {
+          "type": "string",
+          "description": "顧客企業名（日本語表記可）",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "industry": {
+          "type": ["string", "null"],
+          "description": "業種コード（英小文字アンダースコア）",
+          "enum": [
+            "manufacturing",
+            "financial_services",
+            "retail",
+            "healthcare",
+            "pharma",
+            "energy_utilities",
+            "telecom",
+            "government",
+            "education",
+            "media",
+            "logistics",
+            "construction",
+            "professional_services",
+            "technology",
+            "other",
+            null
+          ]
+        },
+        "industry_label": {
+          "type": ["string", "null"],
+          "description": "業種表示名（日本語）",
+          "examples": ["製造業", "金融サービス", "小売"]
+        },
+        "employee_count_range": {
+          "type": ["string", "null"],
+          "description": "従業員数レンジ",
+          "enum": [
+            "under_100",
+            "100-500",
+            "500-1000",
+            "1000-5000",
+            "5000-10000",
+            "10000-50000",
+            "over_50000",
+            null
+          ]
+        },
+        "annual_revenue_range": {
+          "type": ["string", "null"],
+          "description": "年間売上レンジ（JPY）。Endeavor 被害額試算のベース。",
+          "enum": [
+            "under_1B_JPY",
+            "1B-10B_JPY",
+            "10B-100B_JPY",
+            "100B-500B_JPY",
+            "500B-1T_JPY",
+            "over_1T_JPY",
+            null
+          ]
+        },
+        "headquarters_location": {
+          "type": ["string", "null"],
+          "description": "本社所在国コード（ISO 3166-1 alpha-2）",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "current_zscaler_status": {
+          "type": ["string", "null"],
+          "description": "現在のZscaler利用状況",
+          "enum": ["prospect", "poc", "existing_customer", "churned", "unknown", null]
+        },
+        "aw_context": {
+          "type": ["object", "null"],
+          "description": "Architecture Workshop 実施時のコンテキスト",
+          "additionalProperties": false,
+          "properties": {
+            "aw_type": {
+              "type": "string",
+              "enum": ["full", "mini", "deep_dive", "follow_up", "internal"]
+            },
+            "duration_minutes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 480
+            },
+            "attendees_roles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "CEO", "CFO", "CIO", "CISO", "CTO", "COO",
+                  "IT_director", "security_director",
+                  "IT_manager", "security_manager",
+                  "architect", "engineer",
+                  "business_unit_head",
+                  "procurement",
+                  "other"
+                ]
+              },
+              "uniqueItems": true
+            },
+            "partner_involved": {
+              "type": ["string", "null"],
+              "description": "パートナー名（間接販売モデル）"
+            }
+          }
+        }
+      }
+    },
+
+    "amplify": {
+      "type": "object",
+      "description": "Amplify 結果：顧客の課題選択からZscalerソリューションとZTMM 5ピラーへのマッピング",
+      "required": ["completed"],
+      "additionalProperties": false,
+      "properties": {
+        "completed": { "type": "boolean" },
+        "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "selected_use_cases": {
+          "type": "array",
+          "description": "顧客が選択したユースケース",
+          "items": {
+            "type": "object",
+            "required": ["use_case_id"],
+            "additionalProperties": false,
+            "properties": {
+              "use_case_id": { "type": "string" },
+              "use_case_label_ja": { "type": ["string", "null"] },
+              "priority": { "type": ["string", "null"], "enum": ["high", "medium", "low", null] }
+            }
+          }
+        },
+        "ztmm_pillar_mapping": {
+          "type": ["object", "null"],
+          "description": "選択ユースケース→ZTMM 5ピラーマッピング（0-1スコア）",
+          "additionalProperties": false,
+          "properties": {
+            "identity":     { "type": "number", "minimum": 0, "maximum": 1 },
+            "devices":      { "type": "number", "minimum": 0, "maximum": 1 },
+            "networks":     { "type": "number", "minimum": 0, "maximum": 1 },
+            "applications": { "type": "number", "minimum": 0, "maximum": 1 },
+            "data":         { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "recommended_zscaler_products": {
+          "type": "array",
+          "description": "推奨Zscaler製品コード",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ZIA", "ZPA", "ZDX",
+              "ZT_Browser", "ZT_SASE",
+              "ZRA",
+              "Posture_Control",
+              "Data_Protection",
+              "AI_Security",
+              "Risk360",
+              "Z_Flex",
+              "other"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "executive_summary_1line": {
+          "type": ["string", "null"],
+          "description": "経営層向け1行サマリ（日本語、60字以内推奨）",
+          "maxLength": 200
+        }
+      }
+    },
+
+    "maaz": {
+      "type": "object",
+      "description": "MAAZ 結果：MITRE ATT&CK + ATLASのテクニックレベルでZT実装評価、CISA ZTMM 5ピラー成熟度統合",
+      "required": ["completed"],
+      "additionalProperties": false,
+      "properties": {
+        "completed": { "type": "boolean" },
+        "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "ztmm_maturity": {
+          "type": ["object", "null"],
+          "description": "CISA ZTMM 5ピラー成熟度（+ Cross-Cutting Governance）。Endeavor左レーダー6軸の元データ。",
+          "additionalProperties": false,
+          "required": ["identity", "devices", "networks", "applications", "data", "cross_cutting_governance"],
+          "properties": {
+            "identity":                 { "$ref": "#/$defs/ztmm_pillar_score" },
+            "devices":                  { "$ref": "#/$defs/ztmm_pillar_score" },
+            "networks":                 { "$ref": "#/$defs/ztmm_pillar_score" },
+            "applications":             { "$ref": "#/$defs/ztmm_pillar_score" },
+            "data":                     { "$ref": "#/$defs/ztmm_pillar_score" },
+            "cross_cutting_governance": { "$ref": "#/$defs/ztmm_pillar_score" }
+          }
+        },
+        "overall_level": {
+          "type": ["string", "null"],
+          "description": "総合成熟度レベル",
+          "enum": ["Traditional", "Initial", "Advanced", "Optimal", null]
+        },
+        "attack_technique_coverage": {
+          "type": ["object", "null"],
+          "description": "MITRE ATT&CK テクニックカバレッジ",
+          "additionalProperties": false,
+          "properties": {
+            "total_techniques_evaluated": { "type": "integer", "minimum": 0 },
+            "covered_count": { "type": "integer", "minimum": 0 },
+            "coverage_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "covered_technique_ids": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^T\\d{4}(\\.\\d{3})?$" },
+              "uniqueItems": true
+            }
+          }
+        },
+        "atlas_technique_coverage": {
+          "type": ["object", "null"],
+          "description": "MITRE ATLAS（AI Security）テクニックカバレッジ",
+          "additionalProperties": false,
+          "properties": {
+            "total_techniques_evaluated": { "type": "integer", "minimum": 0 },
+            "covered_count": { "type": "integer", "minimum": 0 },
+            "coverage_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "covered_technique_ids": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^AML\\.T\\d{4}(\\.\\d{3})?$" },
+              "uniqueItems": true
+            }
+          }
+        },
+        "priority_gaps": {
+          "type": "array",
+          "description": "優先対処ギャップ（スコア低＋攻撃可能性高）",
+          "items": {
+            "type": "object",
+            "required": ["pillar", "severity"],
+            "additionalProperties": false,
+            "properties": {
+              "pillar": {
+                "type": "string",
+                "enum": ["identity", "devices", "networks", "applications", "data", "cross_cutting_governance"]
+              },
+              "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+              "description_ja": { "type": ["string", "null"] },
+              "related_techniques": {
+                "type": "array",
+                "items": { "type": "string" },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "showtoku": {
+      "type": "object",
+      "description": "Showtoku 結果：NIST CSF 2.0 + AI RMF 1.0/GenAI Profileのギャップ分析（憲法層評価）",
+      "required": ["completed"],
+      "additionalProperties": false,
+      "properties": {
+        "completed": { "type": "boolean" },
+        "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "csf_maturity": {
+          "type": ["object", "null"],
+          "description": "NIST CSF 2.0 6機能の成熟度。Endeavor右レーダー6軸の元データ。",
+          "additionalProperties": false,
+          "required": ["govern", "identify", "protect", "detect", "respond", "recover"],
+          "properties": {
+            "govern":   { "$ref": "#/$defs/csf_function_score" },
+            "identify": { "$ref": "#/$defs/csf_function_score" },
+            "protect":  { "$ref": "#/$defs/csf_function_score" },
+            "detect":   { "$ref": "#/$defs/csf_function_score" },
+            "respond":  { "$ref": "#/$defs/csf_function_score" },
+            "recover":  { "$ref": "#/$defs/csf_function_score" }
+          }
+        },
+        "ai_rmf_maturity": {
+          "type": ["object", "null"],
+          "description": "NIST AI RMF 1.0 / GenAI Profile 成熟度",
+          "additionalProperties": false,
+          "properties": {
+            "govern":  { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "map":     { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "measure": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "manage":  { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+          }
+        },
+        "priority_subcategories": {
+          "type": "array",
+          "description": "優先対処CSFサブカテゴリ（106件中）",
+          "items": {
+            "type": "object",
+            "required": ["subcategory_id"],
+            "additionalProperties": false,
+            "properties": {
+              "subcategory_id": {
+                "type": "string",
+                "description": "CSF 2.0 サブカテゴリID（例: GV.OC-01, ID.AM-01）",
+                "pattern": "^(GV|ID|PR|DE|RS|RC)\\.[A-Z]{2}-\\d{2}$"
+              },
+              "current_tier": { "type": ["integer", "null"], "minimum": 1, "maximum": 4 },
+              "target_tier":  { "type": ["integer", "null"], "minimum": 1, "maximum": 4 },
+              "note_ja": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+
+    "forg": {
+      "type": "object",
+      "description": "Forg 結果：組織摩擦診断（物理学的アナロジー F = (S+L)/(C+L')）",
+      "required": ["completed"],
+      "additionalProperties": false,
+      "properties": {
+        "completed": { "type": "boolean" },
+        "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "variables": {
+          "type": ["object", "null"],
+          "description": "Forg 4変数。0-1正規化スコア。",
+          "additionalProperties": false,
+          "required": ["S", "L", "C", "L_prime"],
+          "properties": {
+            "S":       { "type": "number", "minimum": 0, "maximum": 1, "description": "Strategy：戦略明確度" },
+            "L":       { "type": "number", "minimum": 0, "maximum": 1, "description": "Leadership：経営層発信" },
+            "C":       { "type": "number", "minimum": 0, "maximum": 1, "description": "Complexity：組織複雑性" },
+            "L_prime": { "type": "number", "minimum": 0, "maximum": 1, "description": "Legacy：過去資産負荷" }
+          }
+        },
+        "F_value": {
+          "type": ["number", "null"],
+          "description": "組織摩擦係数 F = (S + L) / (C + L')。値が高いほど低摩擦。",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "industry_average_F": {
+          "type": ["number", "null"],
+          "description": "該当業界の平均F値（250社AW実績ベース）",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "deviation_from_average": {
+          "type": ["number", "null"],
+          "description": "業界平均からの偏差（F_value - industry_average_F）"
+        },
+        "dominant_pattern": {
+          "type": ["object", "null"],
+          "description": "診断されたパターン（Forg v4.3.0 4パターン×1アクション）",
+          "additionalProperties": false,
+          "required": ["pattern_id"],
+          "properties": {
+            "pattern_id": {
+              "type": "string",
+              "enum": ["strategy_gap", "leadership_gap", "complexity_burden", "legacy_drag"]
+            },
+            "pattern_name_ja": {
+              "type": "string",
+              "description": "パターン名（日本語）"
+            },
+            "diagnosis_ja": {
+              "type": "string",
+              "description": "一言診断（日本語）"
+            },
+            "most_deviated_variable": {
+              "type": "string",
+              "description": "最も業界平均から逸脱した変数",
+              "enum": ["S", "L", "C", "L_prime"]
+            }
+          }
+        },
+        "suggestion": {
+          "type": ["object", "null"],
+          "description": "経営層アクション提案。ZT非依存文言。",
+          "additionalProperties": false,
+          "properties": {
+            "action_ja": {
+              "type": "string",
+              "description": "経営層の次の一手（日本語）"
+            },
+            "reference_framework": {
+              "type": ["string", "null"],
+              "description": "参照フレーム（脚注のみ、講義はしない）",
+              "examples": ["Kotter Step 1 (Urgency)", "Kotter Step 2 (Coalition)"]
+            },
+            "common_footer_ja": {
+              "type": "string",
+              "description": "共通脚注（全パターン共通）",
+              "const": "セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります"
+            }
+          }
+        }
+      }
+    },
+
+    "endeavor": {
+      "type": "object",
+      "description": "Endeavor 結果：ROIエグゼクティブダッシュボード。CEO向け変革プレゼン資料＝経営層にリーダーシップ発揮を促すためのストーリー装置。",
+      "required": ["completed"],
+      "additionalProperties": false,
+      "properties": {
+        "completed": { "type": "boolean" },
+        "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "damage_calculation": {
+          "type": ["object", "null"],
+          "description": "想定被害額算出（4要素ロジック × C×L'モデル）。金額単位：JPY。",
+          "additionalProperties": false,
+          "properties": {
+            "components": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ip_valuation": { "type": "number", "minimum": 0, "description": "知的財産・IP評価額" },
+                "business_interruption_loss": { "type": "number", "minimum": 0, "description": "事業停止による機会損失" },
+                "recovery_cost": { "type": "number", "minimum": 0, "description": "事後対応・技術的回復費用" },
+                "compensation_and_reputation": { "type": "number", "minimum": 0, "description": "賠償・制裁金・ブランド毀損" }
+              }
+            },
+            "annual_damage_total": {
+              "type": "number",
+              "minimum": 0,
+              "description": "年間想定被害額合計"
+            },
+            "impact_rate_applied": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "影響率（保守見積り。デフォルト0.20）",
+              "default": 0.20
+            },
+            "calculation_basis": {
+              "type": "string",
+              "description": "算出モデルの識別子（出典明記のため）",
+              "examples": ["C×L'_model_v1"]
+            }
+          }
+        },
+        "maturity_gap_analysis": {
+          "type": ["object", "null"],
+          "description": "成熟度ギャップ分析（ずれパターン診断）",
+          "additionalProperties": false,
+          "properties": {
+            "implementation_current": {
+              "type": ["string", "null"],
+              "enum": ["Traditional", "Initial", "Advanced", "Optimal", null]
+            },
+            "implementation_target": {
+              "type": ["string", "null"],
+              "enum": ["Traditional", "Initial", "Advanced", "Optimal", null]
+            },
+            "governance_current": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "maximum": 4,
+              "description": "CSF Tier（Showtoku未入力時はnull）"
+            },
+            "governance_target": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "maximum": 4
+            },
+            "deviation_pattern": {
+              "type": ["string", "null"],
+              "description": "ずれパターン（5種+部分評価）",
+              "enum": [
+                "healthy",
+                "implementation_leading",
+                "strategy_leading",
+                "full_collapse",
+                "governance_disconnected",
+                "implementation_only_evaluated",
+                "governance_only_evaluated",
+                null
+              ]
+            }
+          }
+        },
+        "time_axis_projection": {
+          "type": ["object", "null"],
+          "description": "時間軸グラフ仕様。理想ライン vs 実効ライン、1-2年固定・忖度なし。",
+          "additionalProperties": false,
+          "properties": {
+            "ideal_years_to_target": {
+              "type": "number",
+              "description": "理想期間（固定：1.5年相当）",
+              "default": 1.5
+            },
+            "forg_adjusted_years_to_target": {
+              "type": ["number", "null"],
+              "description": "遅延年数 = 1.5 × (1 + F値)。Forg未入力時はnull。"
+            },
+            "delay_years": {
+              "type": ["number", "null"],
+              "description": "遅延差分（forg_adjusted - ideal）"
+            },
+            "cumulative_damage_ideal": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "理想ラインの累積被害額"
+            },
+            "cumulative_damage_actual": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "実効ラインの累積被害額"
+            },
+            "damage_difference": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "差分（失われる金額、Exec Brief のシェード領域）"
+            }
+          }
+        },
+        "executive_message": {
+          "type": ["object", "null"],
+          "description": "Exec Brief メインメッセージ。Forgからのアクション参照（action_sourceで出所明記）。",
+          "additionalProperties": false,
+          "properties": {
+            "main_message_ja": {
+              "type": "string",
+              "description": "冒頭メインメッセージ。「1-2年で対策可能な組織変革を放置することで、X年間で¥Y億円の想定被害が累積します」形式。",
+              "examples": ["1-2年で対策可能な組織変革を放置することで、4年間で¥45億円の想定被害が累積します"]
+            },
+            "recommended_action_ja": {
+              "type": "string",
+              "description": "経営層に期待されるアクション（Forg Suggestion から参照）"
+            },
+            "action_source": {
+              "type": "string",
+              "description": "アクション文言の参照元（コピーではないことを明記）",
+              "enum": ["forg.suggestion", "manual", "endeavor.internal"]
+            }
+          }
+        }
+      }
+    },
+
+    "ztmm_pillar_score": {
+      "type": "object",
+      "description": "ZTMM ピラースコア単位",
+      "required": ["level"],
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": ["string", "null"],
+          "enum": ["Traditional", "Initial", "Advanced", "Optimal", null]
+        },
+        "score": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0-1正規化スコア（視覚化用）"
+        },
+        "note_ja": {
+          "type": ["string", "null"],
+          "maxLength": 500
+        }
+      }
+    },
+
+    "csf_function_score": {
+      "type": "object",
+      "description": "CSF 2.0 機能スコア単位",
+      "required": ["tier"],
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Tier 1 (Partial) 〜 Tier 4 (Adaptive)"
+        },
+        "score": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "0-1正規化スコア（視覚化用）"
+        },
+        "note_ja": {
+          "type": ["string", "null"],
+          "maxLength": 500
+        }
+      }
+    }
+  }
+}
