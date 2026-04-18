@@ -1,8 +1,11 @@
-# Ztelier Common Kit v1.0.0
+# Ztelier Common Kit v1.1.0
 
 **Ztelier スイート全ツール共通の基盤アセット**
 
-設計書 `Ztelier_Project_Summary_v1_0.md` 準拠。Amplify / MAAZ / Showtoku / Forg / Endeavor の5ツール（+ PUPY Uplift）が共有するデザイントークン・UI部品・JSON コンテキストスキーマを提供する。
+設計書 `Ztelier_Project_Summary_v1_0.md` ベース＋**Forg v4.1.0+ 実装準拠**。Amplify / MAAZ / Showtoku / Forg / Endeavor の5ツール（+ PUPY Uplift）が共有するデザイントークン・UI部品・JSON コンテキストスキーマを提供する。
+
+> **v1.1.0 の変更点**: Forg 節のスキーマを実装 v4.1.0+ の変数定義（S=Structure/Silo, L=Legacy, C=Crisis/Cost, LP=Leadership）・計算式（`forg = (S×L)/(C×LP)`）に統一。`dominant_pattern` enum を `silo_strong` / `legacy_heavy` / `crisis_weak` / `leadership_weak` に刷新。
+> v1.0.0 → v1.1.0 マイグレーションは `ZtelierMigrate.migrate()` でカスケード実行可能（※ v1.0.0 は未使用のため実質的なマイグレーション対象なし）。
 
 ---
 
@@ -186,16 +189,36 @@ const sessions = ZtelierContext.listSessions();
 
 ```javascript
 // ツール単位の書き込み（設計書「読み書き責任」準拠）
+// Forg v4.1.0+ 準拠：変数は1-5スケール、F値は (S×L)/(C×LP)
 ZtelierContext.updateTool(ctx, 'forg', {
   completed: true,
   version: '4.3.0',
-  variables: { S: 0.45, L: 0.25, C: 0.70, L_prime: 0.60 },
-  F_value: 0.54,
-  // ...
+  variables: { S: 3.2, L: 4.0, C: 2.4, LP: 2.8 },   // 1-5 スケール
+  F_value: 1.90,                                     // (3.2×4.0)/(2.4×2.8) ≒ 1.90
+  F_status: '変革の停滞帯',
+  industry_average_F: 1.52,
+  deviation_from_average: 0.38,                      // 平均より悪い
+  archetype: {
+    cell_id: 'bl',
+    name_ja: '安穏・思考停止型',
+    description_ja: '危機感・変革意志ともに低く、正常性バイアスが働いている状態...'
+  },
+  dominant_pattern: {
+    pattern_id: 'leadership_weak',                   // 変革意志が弱い
+    pattern_name_ja: '変革意志が弱い',
+    diagnosis_ja: '変革失敗時に痛い目を見る責任者が特定されていない',
+    most_deviated_variable: 'LP'
+  },
+  suggestion: {
+    action_ja: '次のQで、セキュリティ投資の意思決定権を持つ事業責任者を1人指名する',
+    reference_framework: 'Kotter Step 3 (Vision)',
+    common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
+  }
+  // recommendations, contradictions 等は省略可
 });
 
 // パス指定での細粒度更新
-ZtelierContext.update(ctx, 'forg.variables.S', 0.50);
+ZtelierContext.update(ctx, 'forg.variables.S', 3.5);
 
 // localStorage 保存（updated_at は自動更新）
 ZtelierContext.save(ctx);
@@ -253,6 +276,56 @@ if (ZtelierMigrate.isMigrationNeeded(ctx)) {
 
 ---
 
+## Forg 統合仕様（v1.1.0 実装準拠）
+
+### 4変数の定義
+
+| 記号 | 名称 | 役割 | 設問数 | 意味 |
+|---|---|---|---|---|
+| `S` | Structure / Silo | 分子（摩擦） | 5問 | 縦割り組織の壁。高いほど厚い。 |
+| `L` | Legacy | 分子（摩擦） | 5問 | 技術的負債・資産。高いほど深い。 |
+| `C` | Crisis / Cost | 分母（推進力） | 4問* | 金銭的危機感。高いほど強い。 |
+| `LP` | Leadership | 分母（推進力） | 5問 | 変革断行への意志。高いほど強い。 |
+
+\* C はうち1問が IT予算/売上高の比率から自動算出（`budget_ratio`）。
+
+### F値の計算式
+
+```
+forg = (S × L) / (C × LP)
+```
+
+- 値域: 0 〜 ∞（C × LP = 0 のとき 99、UI上は 10.0+ で打ち切り）
+- 小さいほど**低摩擦**（加速帯）、大きいほど**膠着**
+- 判定:
+  - `forg < 1.0` → 変革の加速帯（緑）
+  - `1.0 ≤ forg < 2.0` → 変革の停滞帯（黄）
+  - `forg ≥ 2.0` → 変革の膠着帯（赤）
+
+### 4パターン診断（v4.3.0 追加、経営層向け1行サマリ）
+
+最も悪い方向に逸脱した変数に基づき1つだけ選択。優先順位: **LP > S > C > L**（経営層の動きやすさ順）。
+
+| pattern_id | pattern_name_ja | トリガ変数 | 状態 |
+|---|---|---|---|
+| `silo_strong` | 縦割りが強い | S 高 | 分子（摩擦） |
+| `legacy_heavy` | 技術的負債が重い | L 高 | 分子（摩擦） |
+| `crisis_weak` | 危機感が弱い | C 低 | 分母（推進力） |
+| `leadership_weak` | 変革意志が弱い | LP 低 | 分母（推進力） |
+
+### 既存の豊富な資産との関係
+
+既存 Forg v4.1.0+ 実装には以下の資産があり、v1.1.0 スキーマはこれらをすべて保持する：
+
+- **`archetype`** — C × LP の4象限診断（Zenith型 / 孤立無援型 / 外圧依存型 / 安穏型）
+- **`contradictions`** — 変数間の矛盾検出6パターン（S×LP乖離＝口先リーダーシップ等）
+- **`recommendations`** — 条件別の動的アクション提言15件、priority 1/2/3 でソート済み
+- **`budget_ratio`** — IT予算/売上比率の自動算出（日本中央値3.2% / グローバル平均5.5% / US平均8.2%）
+
+`dominant_pattern` と `suggestion`（v4.3.0 新設）は、上記の詳細情報とは別に**経営層向けの1行サマリ**として並列配置する。
+
+---
+
 ## 責任分界点の担保
 
 - ❌ Zscaler ロゴを絶対に入れない（カラーは借りるがロゴは別物）
@@ -285,8 +358,8 @@ python3 -m http.server 8000
 ## バージョニング（3層）
 
 ```
-schema_version  : JSONスキーマ自体のバージョン（現在 1.0.0）
-ztelier_version : Ztelier プロジェクト全体（現在 1.0.0）
+schema_version  : JSONスキーマ自体のバージョン（現在 1.1.0）
+ztelier_version : Ztelier プロジェクト全体（現在 1.1.0）
 各ツール version : 各ツール個別（例: MAAZ v4.2.0, Forg v4.3.0）
 ```
 
@@ -296,6 +369,12 @@ ztelier_version : Ztelier プロジェクト全体（現在 1.0.0）
 
 - 設計書: `Ztelier_Project_Summary_v1_0.md`
 - フレームワーク: MITRE ATT&CK, MITRE ATLAS, CISA ZTMM v2, NIST CSF 2.0, NIST AI RMF 1.0
+
+---
+
+## License
+
+MIT License — see [LICENSE](./LICENSE).
 
 ---
 

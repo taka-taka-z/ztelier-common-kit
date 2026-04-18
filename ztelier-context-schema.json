@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ztelier.local/schemas/ztelier-context/1.0.0",
+  "$id": "https://ztelier.local/schemas/ztelier-context/1.1.0",
   "title": "Ztelier Context",
-  "description": "Ztelier スイート全ツールが共有する単一セッションの評価コンテキスト。Amplify / MAAZ / Showtoku / Forg / Endeavor の結果を統一スキーマで保持する。設計書 v1.0 Phase 4 準拠。",
+  "description": "Ztelier スイート全ツールが共有する単一セッションの評価コンテキスト。Amplify / MAAZ / Showtoku / Forg / Endeavor の結果を統一スキーマで保持する。Forg は実装 v4.1.0+ の変数定義・計算式を正統化（v1.1.0）。",
   "type": "object",
   "required": ["meta", "customer"],
   "additionalProperties": false,
@@ -27,7 +27,7 @@
           "type": "string",
           "description": "このスキーマ定義のバージョン（SemVer）。",
           "pattern": "^\\d+\\.\\d+\\.\\d+$",
-          "const": "1.0.0"
+          "const": "1.1.0"
         },
         "ztelier_version": {
           "type": "string",
@@ -374,7 +374,7 @@
 
     "forg": {
       "type": "object",
-      "description": "Forg 結果：組織摩擦診断（物理学的アナロジー F = (S+L)/(C+L')）",
+      "description": "Forg 結果：組織摩擦診断（物理学的アナロジー forg = (S × L) / (C × LP)）。実装 v4.1.0+ 準拠。",
       "required": ["completed"],
       "additionalProperties": false,
       "properties": {
@@ -382,45 +382,142 @@
         "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
         "variables": {
           "type": ["object", "null"],
-          "description": "Forg 4変数。0-1正規化スコア。",
+          "description": "Forg 4変数。各変数は設問群（S×5, L×5, C×4, LP×5）の平均値で、1-5スケール（1=最良, 5=最悪）。S/L は分子（摩擦）、C/LP は分母（推進力）。",
           "additionalProperties": false,
-          "required": ["S", "L", "C", "L_prime"],
+          "required": ["S", "L", "C", "LP"],
           "properties": {
-            "S":       { "type": "number", "minimum": 0, "maximum": 1, "description": "Strategy：戦略明確度" },
-            "L":       { "type": "number", "minimum": 0, "maximum": 1, "description": "Leadership：経営層発信" },
-            "C":       { "type": "number", "minimum": 0, "maximum": 1, "description": "Complexity：組織複雑性" },
-            "L_prime": { "type": "number", "minimum": 0, "maximum": 1, "description": "Legacy：過去資産負荷" }
+            "S":  { "type": "number", "minimum": 0, "maximum": 5, "description": "Structure / Silo：縦割り組織の壁（分子=摩擦）。高いほど壁が厚い。" },
+            "L":  { "type": "number", "minimum": 0, "maximum": 5, "description": "Legacy：技術的負債・資産（分子=摩擦）。高いほど負債が深い。" },
+            "C":  { "type": "number", "minimum": 0, "maximum": 5, "description": "Crisis / Cost：金銭的危機感（分母=推進力）。高いほど変革の原動力が強い。" },
+            "LP": { "type": "number", "minimum": 0, "maximum": 5, "description": "Leadership：変革断行への意志（分母=推進力）。高いほど推進力が強い。Primed (lp_adj) を格納。" }
+          }
+        },
+        "variables_raw": {
+          "type": ["object", "null"],
+          "description": "矛盾検出によるLP補正前の生値。lp_raw のみ保持。",
+          "additionalProperties": false,
+          "properties": {
+            "lp_raw": { "type": ["number", "null"], "minimum": 0, "maximum": 5, "description": "Leadership生値（矛盾検出で0.85x/0.9x減衰される前の値）" }
+          }
+        },
+        "budget_ratio": {
+          "type": ["object", "null"],
+          "description": "IT予算/売上高の比率計算（C3 の自動算出入力）。実装 v4.1.0+ の budgetRatio / budgetScore を保持。",
+          "additionalProperties": false,
+          "properties": {
+            "it_budget_jpy": { "type": ["number", "null"], "minimum": 0, "description": "年間IT予算（円）" },
+            "annual_revenue_jpy": { "type": ["number", "null"], "minimum": 0, "description": "年間売上（円）" },
+            "ratio_percent": { "type": ["number", "null"], "minimum": 0, "description": "(it_budget / revenue) × 100。日本中央値3.2%・グローバル5.5%・US 8.2%" },
+            "score": { "type": ["integer", "null"], "minimum": 0, "maximum": 5, "description": "budgetRatio から 1-5 スコア変換（C 計算の一要素）" }
           }
         },
         "F_value": {
           "type": ["number", "null"],
-          "description": "組織摩擦係数 F = (S + L) / (C + L')。値が高いほど低摩擦。",
-          "minimum": 0,
-          "maximum": 2
+          "description": "組織摩擦係数 forg = (S × L) / (C × LP)。0に近いほど低摩擦（加速帯）。C × LP = 0 の場合は 99 を返す（分母ゼロ例外）。UI上は 10.0+ で打ち切り表示。",
+          "minimum": 0
+        },
+        "F_status": {
+          "type": ["string", "null"],
+          "description": "F値の定性判定。実装 v4.1.0 の forgStatus 準拠。",
+          "enum": ["変革の加速帯", "変革の停滞帯", "変革の膠着帯", "入力待ち...", null]
         },
         "industry_average_F": {
           "type": ["number", "null"],
-          "description": "該当業界の平均F値（250社AW実績ベース）",
-          "minimum": 0,
-          "maximum": 2
+          "description": "該当業界の平均F値（250社AW実績ベース、業界別テーブルから参照）",
+          "minimum": 0
         },
         "deviation_from_average": {
           "type": ["number", "null"],
-          "description": "業界平均からの偏差（F_value - industry_average_F）"
+          "description": "業界平均からの偏差（F_value - industry_average_F）。正=平均より悪い、負=平均より良い。"
+        },
+        "archetype": {
+          "type": ["object", "null"],
+          "description": "C × LP の4象限アーキタイプ診断（実装 v4.1.0+ 準拠）",
+          "additionalProperties": false,
+          "required": ["cell_id"],
+          "properties": {
+            "cell_id": {
+              "type": "string",
+              "description": "4象限セル識別子。tr=topright, tl=topleft, br=bottomright, bl=bottomleft",
+              "enum": ["tr", "tl", "br", "bl"]
+            },
+            "name_ja": {
+              "type": "string",
+              "description": "アーキタイプ名",
+              "examples": ["変革の臨界点（Zenith型）", "孤立無援・理想家型", "外圧依存・消去法型", "安穏・思考停止型"]
+            },
+            "description_ja": { "type": ["string", "null"] }
+          }
+        },
+        "contradictions": {
+          "type": "array",
+          "description": "矛盾検出結果（実装 v4.1.0+ の 6パターン）。変数間の不整合（例：S×LP乖離＝口先リーダーシップ）を検出。",
+          "items": {
+            "type": "object",
+            "required": ["title_ja"],
+            "additionalProperties": false,
+            "properties": {
+              "pattern_id": {
+                "type": ["string", "null"],
+                "description": "矛盾パターン識別子",
+                "enum": [
+                  "S_LP_divergence",
+                  "C_LP_inverse",
+                  "C_LP_external_dependency",
+                  "S4_LP4_paper_plan",
+                  "C2_C3_lip_service",
+                  "L1_C3_stuck_despite_funds",
+                  null
+                ]
+              },
+              "title_ja": { "type": "string" },
+              "description_ja": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "damage_estimate_jpy": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Forg単体で算出する想定被害額（円）。計算式 daily × 14日 × 0.2 + 2（実装 v4.1.0）。Endeavor の damage_calculation より簡易版。"
+        },
+        "recommendations": {
+          "type": "array",
+          "description": "優先アクション提言（実装 v4.1.0+ の recs）。条件に応じて動的生成。priority 1/2/3 で重要度ソート済み。",
+          "items": {
+            "type": "object",
+            "required": ["priority", "title_ja"],
+            "additionalProperties": false,
+            "properties": {
+              "priority": { "type": "integer", "enum": [1, 2, 3], "description": "1=最優先, 2=推奨, 3=長期" },
+              "title_ja": { "type": "string" },
+              "description_ja": { "type": ["string", "null"] },
+              "trigger_variable": {
+                "type": ["string", "null"],
+                "description": "このrecをトリガした変数/設問（例: S, L, sc.s4, budgetScore等）"
+              }
+            }
+          }
         },
         "dominant_pattern": {
           "type": ["object", "null"],
-          "description": "診断されたパターン（Forg v4.3.0 4パターン×1アクション）",
+          "description": "経営層向け4パターン診断（v4.3.0 新設）。最も悪い方向に逸脱した変数に基づき1つだけ選択。優先順位: LP > S > C > L。",
           "additionalProperties": false,
           "required": ["pattern_id"],
           "properties": {
             "pattern_id": {
               "type": "string",
-              "enum": ["strategy_gap", "leadership_gap", "complexity_burden", "legacy_drag"]
+              "description": "パターン識別子。S/L=高いほど悪い、C/LP=低いほど悪い。命名は「悪化状態を表す形容詞句」で統一。",
+              "enum": [
+                "leadership_weak",
+                "silo_strong",
+                "crisis_weak",
+                "legacy_heavy"
+              ]
             },
             "pattern_name_ja": {
               "type": "string",
-              "description": "パターン名（日本語）"
+              "description": "パターン名（日本語）。例: 縦割りが強い / 技術的負債が重い / 危機感が弱い / 変革意志が弱い",
+              "examples": ["縦割りが強い", "技術的負債が重い", "危機感が弱い", "変革意志が弱い"]
             },
             "diagnosis_ja": {
               "type": "string",
@@ -428,14 +525,14 @@
             },
             "most_deviated_variable": {
               "type": "string",
-              "description": "最も業界平均から逸脱した変数",
-              "enum": ["S", "L", "C", "L_prime"]
+              "description": "最も業界平均から悪化方向に逸脱した変数",
+              "enum": ["S", "L", "C", "LP"]
             }
           }
         },
         "suggestion": {
           "type": ["object", "null"],
-          "description": "経営層アクション提案。ZT非依存文言。",
+          "description": "経営層アクション提案（v4.3.0 新設）。ZT非依存文言。既存の recommendations とは別に、経営層向けの1行サマリとして表示。",
           "additionalProperties": false,
           "properties": {
             "action_ja": {
@@ -467,7 +564,7 @@
         "version": { "type": ["string", "null"], "pattern": "^\\d+\\.\\d+\\.\\d+$" },
         "damage_calculation": {
           "type": ["object", "null"],
-          "description": "想定被害額算出（4要素ロジック × C×L'モデル）。金額単位：JPY。",
+          "description": "想定被害額算出（4要素ロジック × C×LPモデル）。金額単位：JPY。Forg の Crisis/Cost × Leadership の積をベースに、組織が変革を怠った場合の想定被害額を算出。",
           "additionalProperties": false,
           "properties": {
             "components": {
@@ -495,7 +592,7 @@
             "calculation_basis": {
               "type": "string",
               "description": "算出モデルの識別子（出典明記のため）",
-              "examples": ["C×L'_model_v1"]
+              "examples": ["CxLP_model_v1", "Forg_damage_v1"]
             }
           }
         },

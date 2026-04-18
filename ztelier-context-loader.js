@@ -35,8 +35,8 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const SCHEMA_VERSION   = '1.0.0';
-  const ZTELIER_VERSION  = '1.0.0';
+  const SCHEMA_VERSION   = '1.1.0';
+  const ZTELIER_VERSION  = '1.1.0';
   const STORAGE_PREFIX   = 'ztelier-context:';   // localStorage キー接頭辞
   const STORAGE_INDEX    = 'ztelier-context:__index__';  // セッションID一覧
 
@@ -217,15 +217,19 @@
       }
     });
 
-    // Forg F値の整合性（参考チェック）
+    // Forg F値の整合性（実装 v4.1.0+ 準拠: forg = (S×L) / (C×LP)）
     if (ctx.forg && ctx.forg.completed && ctx.forg.variables) {
       const v = ctx.forg.variables;
-      const computed = (v.S + v.L) / (v.C + v.L_prime);
-      if (ctx.forg.F_value != null && Math.abs(ctx.forg.F_value - computed) > 0.01) {
-        errors.push({
-          path: 'forg.F_value',
-          message: `inconsistent with variables: expected ${computed.toFixed(3)}, got ${ctx.forg.F_value}`
-        });
+      if (typeof v.S === 'number' && typeof v.L === 'number' &&
+          typeof v.C === 'number' && typeof v.LP === 'number') {
+        const denom = v.C * v.LP;
+        const computed = denom > 0 ? (v.S * v.L) / denom : (v.S > 0 ? 99 : 0);
+        if (ctx.forg.F_value != null && Math.abs(ctx.forg.F_value - computed) > 0.01) {
+          errors.push({
+            path: 'forg.F_value',
+            message: `inconsistent with variables: expected ${computed.toFixed(3)}, got ${ctx.forg.F_value}. Formula: (S×L)/(C×LP)`
+          });
+        }
       }
     }
 
@@ -262,6 +266,6 @@
     validate,
     isToolReady,
 
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));

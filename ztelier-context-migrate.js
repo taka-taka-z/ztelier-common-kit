@@ -26,7 +26,7 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const LATEST_VERSION = '1.0.0';
+  const LATEST_VERSION = '1.1.0';
 
   /**
    * マイグレーション定義。
@@ -36,20 +36,51 @@
    *   1. 下の migrations に entry 追加
    *   2. fn は副作用なしの純粋関数で書く
    *   3. LATEST_VERSION を更新
-   *
-   * 例（将来の v1.1.0 追加時）:
-   *   '1.0.0': {
-   *     to: '1.1.0',
-   *     fn: (ctx) => {
-   *       const next = JSON.parse(JSON.stringify(ctx));
-   *       // ここで構造変換
-   *       next.meta.schema_version = '1.1.0';
-   *       return next;
-   *     }
-   *   }
    */
   const migrations = {
-    // 現時点では空。v1.0.0 が最新。
+    '1.0.0': {
+      to: '1.1.0',
+      fn: (ctx) => {
+        // v1.0.0 → v1.1.0: Forg の変数定義を実装準拠に変更
+        // - 値域 0-1 → 1-5 (既存値は線形変換)
+        // - L_prime → LP (実装では Leadership)
+        // - v1.0.0 の L(Leadership) と L_prime(Legacy) を、v1.1.0 の LP(Leadership) と L(Legacy) に入れ替え
+        // - pattern_id: strategy_gap → structure_silo, complexity_burden → crisis_gap
+        const next = JSON.parse(JSON.stringify(ctx));
+
+        if (next.forg && next.forg.variables) {
+          const old = next.forg.variables;
+          const scale = (v) => (typeof v === 'number') ? (v * 4 + 1) : v;  // 0-1 → 1-5
+          next.forg.variables = {
+            S:  scale(old.S),        // Strategy → Structure/Silo（概念差あり、要注意）
+            L:  scale(old.L_prime),  // Legacy（旧 L_prime から移行）
+            C:  scale(old.C),        // Complexity → Crisis/Cost（概念差あり、要注意）
+            LP: scale(old.L)         // Leadership（旧 L から移行）
+          };
+          // F値は再計算推奨のため削除（null化）
+          next.forg.F_value = null;
+          next.forg._migration_note = 'v1.0.0 → v1.1.0: variable mapping applied, F_value cleared for recalc';
+        }
+
+        // pattern_id マッピング（v1.0.0 は設計書準拠の命名だったが、v1.1.0 で実装準拠＋直感的命名に）
+        if (next.forg && next.forg.dominant_pattern && next.forg.dominant_pattern.pattern_id) {
+          const patternMap = {
+            // v1.0.0 (設計書)           → v1.1.0 (実装準拠・直感的命名)
+            'strategy_gap':       'silo_strong',       // v1.0.0 の Strategy Gap は v1.1.0 の「縦割りが強い」相当
+            'leadership_gap':     'leadership_weak',   // 意味保持、語尾変更
+            'complexity_burden':  'crisis_weak',       // v1.0.0 の Complexity Burden は v1.1.0 の「危機感が弱い」相当
+            'legacy_drag':        'legacy_heavy'       // 意味保持、語尾変更
+          };
+          const oldId = next.forg.dominant_pattern.pattern_id;
+          if (patternMap[oldId]) {
+            next.forg.dominant_pattern.pattern_id = patternMap[oldId];
+          }
+        }
+
+        next.meta.schema_version = '1.1.0';
+        return next;
+      }
+    }
   };
 
   /**
@@ -160,6 +191,6 @@
     isMigrationNeeded,
     listMigrations,
     LATEST_VERSION,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));

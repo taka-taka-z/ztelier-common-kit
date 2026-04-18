@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ztelier Common Kit — Demo (Standalone)</title>
+  <title>Ztelier Common Kit — Demo (Standalone v1.1.0)</title>
   <style>
 /* ============================================================================
  * Ztelier Common Kit — Design Tokens
@@ -564,7 +564,7 @@
 <body class="ztelier-scope">
 
   <!-- Web Component での使用例 -->
-  <ztelier-header tool-name="Common Kit Demo" tool-version="v1.0.0" tool-color="#B8895E"></ztelier-header>
+  <ztelier-header tool-name="Common Kit Demo" tool-version="v1.1.0" tool-color="#7BA05B"></ztelier-header>
 
   <main class="demo-main">
 
@@ -695,10 +695,13 @@
       <h2 class="ztelier-section__title">5. Metric / Score 表示</h2>
       <div class="ztelier-card ztelier-card--elevated" style="max-width: 420px;">
         <div class="ztelier-card__subtitle">組織摩擦係数（Forg F値）</div>
-        <div class="ztelier-metric ztelier-metric--xl">0.38</div>
+        <div class="ztelier-metric ztelier-metric--xl">1.90</div>
         <div style="display: flex; gap: var(--ztelier-space-2); margin-top: var(--ztelier-space-2); align-items: center;">
-          <span class="ztelier-badge ztelier-badge--level-2">業界平均 0.52</span>
-          <span style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted);">-0.14（要改善）</span>
+          <span class="ztelier-badge ztelier-badge--level-2">変革の停滞帯</span>
+          <span style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted);">業界平均 1.52 / +0.38（要改善）</span>
+        </div>
+        <div style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted); margin-top: var(--ztelier-space-2); font-family: var(--ztelier-font-mono);">
+          forg = (S × L) / (C × LP) = (3.2 × 4.0) / (2.4 × 2.8)
         </div>
       </div>
     </section>
@@ -909,7 +912,7 @@
   return {
     render,
     Element: ZtelierHeaderElement,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));
 
@@ -1065,7 +1068,7 @@
     DEFAULT_DISCLAIMER,
     DEFAULT_PHILOSOPHY,
     DEFAULT_FRAMEWORKS,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));
 
@@ -1108,8 +1111,8 @@
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const SCHEMA_VERSION   = '1.0.0';
-  const ZTELIER_VERSION  = '1.0.0';
+  const SCHEMA_VERSION   = '1.1.0';
+  const ZTELIER_VERSION  = '1.1.0';
   const STORAGE_PREFIX   = 'ztelier-context:';   // localStorage キー接頭辞
   const STORAGE_INDEX    = 'ztelier-context:__index__';  // セッションID一覧
 
@@ -1292,15 +1295,19 @@ ${summary}`);
       }
     });
 
-    // Forg F値の整合性（参考チェック）
+    // Forg F値の整合性（実装 v4.1.0+ 準拠: forg = (S×L) / (C×LP)）
     if (ctx.forg && ctx.forg.completed && ctx.forg.variables) {
       const v = ctx.forg.variables;
-      const computed = (v.S + v.L) / (v.C + v.L_prime);
-      if (ctx.forg.F_value != null && Math.abs(ctx.forg.F_value - computed) > 0.01) {
-        errors.push({
-          path: 'forg.F_value',
-          message: `inconsistent with variables: expected ${computed.toFixed(3)}, got ${ctx.forg.F_value}`
-        });
+      if (typeof v.S === 'number' && typeof v.L === 'number' &&
+          typeof v.C === 'number' && typeof v.LP === 'number') {
+        const denom = v.C * v.LP;
+        const computed = denom > 0 ? (v.S * v.L) / denom : (v.S > 0 ? 99 : 0);
+        if (ctx.forg.F_value != null && Math.abs(ctx.forg.F_value - computed) > 0.01) {
+          errors.push({
+            path: 'forg.F_value',
+            message: `inconsistent with variables: expected ${computed.toFixed(3)}, got ${ctx.forg.F_value}. Formula: (S×L)/(C×LP)`
+          });
+        }
       }
     }
 
@@ -1337,7 +1344,7 @@ ${summary}`);
     validate,
     isToolReady,
 
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));
 
@@ -1561,7 +1568,7 @@ ${summary}`);
     updateTool,
     exportToFile,
     copyToClipboard,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));
 
@@ -1595,7 +1602,7 @@ ${summary}`);
 }(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  const LATEST_VERSION = '1.0.0';
+  const LATEST_VERSION = '1.1.0';
 
   /**
    * マイグレーション定義。
@@ -1605,20 +1612,51 @@ ${summary}`);
    *   1. 下の migrations に entry 追加
    *   2. fn は副作用なしの純粋関数で書く
    *   3. LATEST_VERSION を更新
-   *
-   * 例（将来の v1.1.0 追加時）:
-   *   '1.0.0': {
-   *     to: '1.1.0',
-   *     fn: (ctx) => {
-   *       const next = JSON.parse(JSON.stringify(ctx));
-   *       // ここで構造変換
-   *       next.meta.schema_version = '1.1.0';
-   *       return next;
-   *     }
-   *   }
    */
   const migrations = {
-    // 現時点では空。v1.0.0 が最新。
+    '1.0.0': {
+      to: '1.1.0',
+      fn: (ctx) => {
+        // v1.0.0 → v1.1.0: Forg の変数定義を実装準拠に変更
+        // - 値域 0-1 → 1-5 (既存値は線形変換)
+        // - L_prime → LP (実装では Leadership)
+        // - v1.0.0 の L(Leadership) と L_prime(Legacy) を、v1.1.0 の LP(Leadership) と L(Legacy) に入れ替え
+        // - pattern_id: strategy_gap → structure_silo, complexity_burden → crisis_gap
+        const next = JSON.parse(JSON.stringify(ctx));
+
+        if (next.forg && next.forg.variables) {
+          const old = next.forg.variables;
+          const scale = (v) => (typeof v === 'number') ? (v * 4 + 1) : v;  // 0-1 → 1-5
+          next.forg.variables = {
+            S:  scale(old.S),        // Strategy → Structure/Silo（概念差あり、要注意）
+            L:  scale(old.L_prime),  // Legacy（旧 L_prime から移行）
+            C:  scale(old.C),        // Complexity → Crisis/Cost（概念差あり、要注意）
+            LP: scale(old.L)         // Leadership（旧 L から移行）
+          };
+          // F値は再計算推奨のため削除（null化）
+          next.forg.F_value = null;
+          next.forg._migration_note = 'v1.0.0 → v1.1.0: variable mapping applied, F_value cleared for recalc';
+        }
+
+        // pattern_id マッピング（v1.0.0 は設計書準拠の命名だったが、v1.1.0 で実装準拠＋直感的命名に）
+        if (next.forg && next.forg.dominant_pattern && next.forg.dominant_pattern.pattern_id) {
+          const patternMap = {
+            // v1.0.0 (設計書)           → v1.1.0 (実装準拠・直感的命名)
+            'strategy_gap':       'silo_strong',       // v1.0.0 の Strategy Gap は v1.1.0 の「縦割りが強い」相当
+            'leadership_gap':     'leadership_weak',   // 意味保持、語尾変更
+            'complexity_burden':  'crisis_weak',       // v1.0.0 の Complexity Burden は v1.1.0 の「危機感が弱い」相当
+            'legacy_drag':        'legacy_heavy'       // 意味保持、語尾変更
+          };
+          const oldId = next.forg.dominant_pattern.pattern_id;
+          if (patternMap[oldId]) {
+            next.forg.dominant_pattern.pattern_id = patternMap[oldId];
+          }
+        }
+
+        next.meta.schema_version = '1.1.0';
+        return next;
+      }
+    }
   };
 
   /**
@@ -1729,7 +1767,7 @@ ${summary}`);
     isMigrationNeeded,
     listMigrations,
     LATEST_VERSION,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));
 
@@ -1758,22 +1796,49 @@ ${summary}`);
 
     document.getElementById('btn-update-forg').addEventListener('click', () => {
       if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      // Forg v4.1.0+ 準拠サンプル: forg = (3.2×4.0)/(2.4×2.8) ≒ 1.905
       ZtelierContext.updateTool(currentCtx, 'forg', {
         completed: true,
         version: '4.3.0',
-        variables: { S: 0.45, L: 0.25, C: 0.70, L_prime: 0.60 },
-        F_value: 0.54,
-        industry_average_F: 0.52,
-        deviation_from_average: 0.02,
+        variables: { S: 3.2, L: 4.0, C: 2.4, LP: 2.8 },
+        variables_raw: { lp_raw: 2.8 },
+        budget_ratio: {
+          it_budget_jpy: 300000000,
+          annual_revenue_jpy: 30000000000,
+          ratio_percent: 1.0,
+          score: 2
+        },
+        F_value: 1.90,
+        F_status: '変革の停滞帯',
+        industry_average_F: 1.52,
+        deviation_from_average: 0.38,
+        archetype: {
+          cell_id: 'bl',
+          name_ja: '安穏・思考停止型',
+          description_ja: '危機感・変革意志ともに低く、正常性バイアスが働いている状態です。同業他社のインシデント事例で「自社に起きたら」をリアルに体感させてください。'
+        },
+        contradictions: [
+          {
+            pattern_id: 'C_LP_external_dependency',
+            title_ja: "C×L' 乖離：「外圧待ち・消去法型」",
+            description_ja: '危機感（C）は高いのに変革意志（LP）が低い。最も典型的な「外圧依存」パターンです。'
+          }
+        ],
+        damage_estimate_jpy: 232000000,
+        recommendations: [
+          { priority: 1, title_ja: '内部チャンピオンの特定と巻き込み',
+            description_ja: "LPが不足しています。「失敗した時に最も痛い目を見る人」を特定し、個別ストーリーを作ってください。",
+            trigger_variable: 'LP' }
+        ],
         dominant_pattern: {
-          pattern_id: 'leadership_gap',
-          pattern_name_ja: 'Leadership Gap',
-          diagnosis_ja: '経営層の発信が現場に届いていない',
-          most_deviated_variable: 'L'
+          pattern_id: 'leadership_weak',
+          pattern_name_ja: '変革意志が弱い',
+          diagnosis_ja: '変革失敗時に痛い目を見る責任者が特定されていない',
+          most_deviated_variable: 'LP'
         },
         suggestion: {
-          action_ja: '次の全社発信でCEO自身が「守りたい事業・顧客・データ」を具体名で語る',
-          reference_framework: 'Kotter Step 1 (Urgency)',
+          action_ja: '次のQで、セキュリティ投資の意思決定権を持つ事業責任者を1人指名する',
+          reference_framework: 'Kotter Step 3 (Vision)',
           common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
         }
       });

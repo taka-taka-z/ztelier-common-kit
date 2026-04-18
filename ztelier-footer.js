@@ -148,6 +148,6 @@
     DEFAULT_DISCLAIMER,
     DEFAULT_PHILOSOPHY,
     DEFAULT_FRAMEWORKS,
-    version: '1.0.0'
+    version: '1.1.0'
   };
 }));

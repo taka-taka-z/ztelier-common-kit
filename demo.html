@@ -65,7 +65,7 @@
 <body class="ztelier-scope">
 
   <!-- Web Component での使用例 -->
-  <ztelier-header tool-name="Common Kit Demo" tool-version="v1.0.0" tool-color="#B8895E"></ztelier-header>
+  <ztelier-header tool-name="Common Kit Demo" tool-version="v1.1.0" tool-color="#7BA05B"></ztelier-header>
 
   <main class="demo-main">
 
@@ -196,10 +196,13 @@
       <h2 class="ztelier-section__title">5. Metric / Score 表示</h2>
       <div class="ztelier-card ztelier-card--elevated" style="max-width: 420px;">
         <div class="ztelier-card__subtitle">組織摩擦係数（Forg F値）</div>
-        <div class="ztelier-metric ztelier-metric--xl">0.38</div>
+        <div class="ztelier-metric ztelier-metric--xl">1.90</div>
         <div style="display: flex; gap: var(--ztelier-space-2); margin-top: var(--ztelier-space-2); align-items: center;">
-          <span class="ztelier-badge ztelier-badge--level-2">業界平均 0.52</span>
-          <span style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted);">-0.14（要改善）</span>
+          <span class="ztelier-badge ztelier-badge--level-2">変革の停滞帯</span>
+          <span style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted);">業界平均 1.52 / +0.38（要改善）</span>
+        </div>
+        <div style="font-size: var(--ztelier-font-xs); color: var(--ztelier-muted); margin-top: var(--ztelier-space-2); font-family: var(--ztelier-font-mono);">
+          forg = (S × L) / (C × LP) = (3.2 × 4.0) / (2.4 × 2.8)
         </div>
       </div>
     </section>
@@ -262,22 +265,49 @@
 
     document.getElementById('btn-update-forg').addEventListener('click', () => {
       if (!currentCtx) { alert('まず新規セッションを作成してください'); return; }
+      // Forg v4.1.0+ 準拠サンプル: forg = (3.2×4.0)/(2.4×2.8) ≒ 1.905
       ZtelierContext.updateTool(currentCtx, 'forg', {
         completed: true,
         version: '4.3.0',
-        variables: { S: 0.45, L: 0.25, C: 0.70, L_prime: 0.60 },
-        F_value: 0.54,
-        industry_average_F: 0.52,
-        deviation_from_average: 0.02,
+        variables: { S: 3.2, L: 4.0, C: 2.4, LP: 2.8 },
+        variables_raw: { lp_raw: 2.8 },
+        budget_ratio: {
+          it_budget_jpy: 300000000,
+          annual_revenue_jpy: 30000000000,
+          ratio_percent: 1.0,
+          score: 2
+        },
+        F_value: 1.90,
+        F_status: '変革の停滞帯',
+        industry_average_F: 1.52,
+        deviation_from_average: 0.38,
+        archetype: {
+          cell_id: 'bl',
+          name_ja: '安穏・思考停止型',
+          description_ja: '危機感・変革意志ともに低く、正常性バイアスが働いている状態です。同業他社のインシデント事例で「自社に起きたら」をリアルに体感させてください。'
+        },
+        contradictions: [
+          {
+            pattern_id: 'C_LP_external_dependency',
+            title_ja: "C×L' 乖離：「外圧待ち・消去法型」",
+            description_ja: '危機感（C）は高いのに変革意志（LP）が低い。最も典型的な「外圧依存」パターンです。'
+          }
+        ],
+        damage_estimate_jpy: 232000000,
+        recommendations: [
+          { priority: 1, title_ja: '内部チャンピオンの特定と巻き込み',
+            description_ja: "LPが不足しています。「失敗した時に最も痛い目を見る人」を特定し、個別ストーリーを作ってください。",
+            trigger_variable: 'LP' }
+        ],
         dominant_pattern: {
-          pattern_id: 'leadership_gap',
-          pattern_name_ja: 'Leadership Gap',
-          diagnosis_ja: '経営層の発信が現場に届いていない',
-          most_deviated_variable: 'L'
+          pattern_id: 'leadership_weak',
+          pattern_name_ja: '変革意志が弱い',
+          diagnosis_ja: '変革失敗時に痛い目を見る責任者が特定されていない',
+          most_deviated_variable: 'LP'
         },
         suggestion: {
-          action_ja: '次の全社発信でCEO自身が「守りたい事業・顧客・データ」を具体名で語る',
-          reference_framework: 'Kotter Step 1 (Urgency)',
+          action_ja: '次のQで、セキュリティ投資の意思決定権を持つ事業責任者を1人指名する',
+          reference_framework: 'Kotter Step 3 (Vision)',
           common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
         }
       });
