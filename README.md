@@ -1,381 +1,283 @@
-# Ztelier Common Kit v1.1.0
+# Handoff: Ztelier — Zero Trust Maturity & ROI Dashboard
 
-**Ztelier スイート全ツール共通の基盤アセット**
+## Overview
+Ztelier is a Zero Trust maturity-gap analysis and ROI dashboard. Security leaders use it to see where their ZT program sits today (by pillar), what tier they're targeting, how far they are from that target, and what the 36-month ROI looks like if they fund the proposed initiatives. The product concept fuses Zero Trust with an **architectural-atelier visual metaphor** — the product treats the security posture like a drafting-room elevation drawing.
 
-設計書 `Ztelier_Project_Summary_v1_0.md` ベース＋**Forg v4.1.0+ 実装準拠**。Amplify / MAAZ / Showtoku / Forg / Endeavor の5ツール（+ PUPY Uplift）が共有するデザイントークン・UI部品・JSON コンテキストスキーマを提供する。
+## About the Design Files
+The files in this bundle are **design references created in HTML/React (via Babel standalone)**. They are *prototypes* that show the intended look, information architecture, and interactions — **not production code to copy verbatim**.
 
-> **v1.1.0 の変更点**: Forg 節のスキーマを実装 v4.1.0+ の変数定義（S=Structure/Silo, L=Legacy, C=Crisis/Cost, LP=Leadership）・計算式（`forg = (S×L)/(C×LP)`）に統一。`dominant_pattern` enum を `silo_strong` / `legacy_heavy` / `crisis_weak` / `leadership_weak` に刷新。
-> v1.0.0 → v1.1.0 マイグレーションは `ZtelierMigrate.migrate()` でカスケード実行可能（※ v1.0.0 は未使用のため実質的なマイグレーション対象なし）。
+Your task is to **recreate these designs in the target codebase's existing environment** (React, Next.js, Remix, Vue, SwiftUI, etc.) using its established patterns, design tokens, router, and data layer. If no codebase exists yet, choose a modern React + TypeScript + Vite/Next.js stack and implement the designs there.
 
----
+Do **not** ship the HTML/JSX verbatim: the prototype uses a single `styles.css` with CSS variables, inline styles, global babel transforms, and `Object.assign(window, ...)` to share components. That's fine for a design artifact but not for production.
 
-## 構成
+## Fidelity
+**High-fidelity.** Final colors, typography, spacing, and interaction model are intentional and should be matched. Exact hex values, font stacks, and measurements appear below under **Design Tokens**. When the target codebase has an existing design system, reuse its tokens where they match; otherwise, adopt these values.
 
-```
-ztelier-common-kit/
-├── ztelier-tokens.css            # カラー / タイポ / 状態色 / ユーティリティクラス
-├── ztelier-header.js             # 共通ヘッダー（Web Component + プレーン関数）
-├── ztelier-footer.js             # 共通フッター（責任分界点の担保）
-├── ztelier-context-schema.json   # JSON Schema Draft 2020-12
-├── ztelier-context-loader.js     # Context 読込 / empty / validate
-├── ztelier-context-writer.js     # Context 保存 / 部分更新 / export
-├── ztelier-context-migrate.js    # スキーマバージョン間マイグレーション
-├── demo.html                     # 動作確認用デモ
-└── README.md                     # このファイル
-```
+## Product Structure
+Single-page dashboard composed of a top bar, a 12-column grid of panels, a floating Tweaks panel (bottom-right), and a slide-over drawer for the Policy Editor.
 
-**Ztelierルール変更時に全ツール一括アップデート可能** な構造（設計書 Phase 1 準拠）。
+### Top Bar
+- Logo mark (28×28 bordered square with internal crosshair) + wordmark "Ztelier" + mono sub-label `ZERO-TRUST · DRAFTING STUDIO`
+- Center: five tabs — `ELEVATION`, `HEATMAP`, `SECTION`, `BACKLOG`, `ALERTS` (only ELEVATION is wired up)
+- Right: live indicator (blinking green dot + metaphor label), theme toggle, 32×32 avatar square
+- Sticky, `backdrop-filter: blur(8px)`, `border-bottom: 1px solid var(--line-1)`
 
----
+### Panels (12-col grid, 24px gutter)
+Every panel uses **corner crosshairs instead of card shadows**. Crosshairs are 12px `+` marks in `var(--accent)` at the four corners of the panel box. Each panel carries a **title block** at the bottom — monospace 10px/uppercase caption with `Drawing No.`, `Scale · Rev · Date`.
 
-## クイックスタート
+1. **Hero strip (col-12)** — `A-100 · ELEVATION · OVERALL MATURITY`
+   - Left: display-serif headline ("Your Zero Trust is a half-built structure."), with "half-built structure" in accent color.
+   - Right: 4 big metrics (Current Tier, Target Tier, ROI 36mo, Payback) + a decorative North-arrow SVG
+   - Background tint: `var(--paper-tint)` (4% accent-tinted)
 
-各ツール（単一HTMLファイル）への組み込み最小例：
+2. **Elevation chart (col-8)** — `A-101 · ELEVATION · FACADE SOUTH`
+   - SVG bar chart drawn as an architectural elevation view.
+   - Horizontal "ground line" at tier 0 with hatched ground below.
+   - Each of 7 ZT pillars is a column rising to its *current tier*; dashed horizontal cap marks *target tier*; hatched region between current and target represents the gap with a `Δ1.7` style label in ochre.
+   - Internal subdivisions every 0.5 tier (thin horizontal stroke lines inside the column — "stories").
+   - Dashed horizontal mean lines labeled `MEAN · CURRENT 2.41` and `MEAN · TARGET 4.15` in accent color.
+   - Clicking a column selects it (stroke flips to accent, column fills with accent color, annotation `▼ SELECTED` appears above).
 
-```html
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>MAAZ v4.2.0</title>
-  <link rel="stylesheet" href="./common-kit/ztelier-tokens.css">
-</head>
-<body class="ztelier-scope">
+3. **Pillar inspector (col-4)** — `A-102 · DETAIL · ZT-XX`
+   - Shows the selected pillar. Code, name, description, weight.
+   - Three big metric rows: CURRENT / TARGET / GAP
+   - A 26px horizontal progress bar: solid fill = current, hatched extension = gap, vertical line = target marker
+   - List of top 3 recommended initiatives from `INITIATIVES` filtered by this pillar (code, name, impact, effort/cost)
+   - Primary CTA button `OPEN POLICY EDITOR` opens the drawer
 
-  <ztelier-header
-    tool-name="MAAZ"
-    tool-version="v4.2.0"
-    tool-color="#001744">
-  </ztelier-header>
+4. **ROI section (col-7)** — `A-201 · SECTION A-A' · RETURN ON INVESTMENT`
+   - SVG "section drawing": horizontal ground line at ~42% down the viewBox.
+   - **Above the line**: sage-green savings bars (12px wide, one per month, 37 months)
+   - **Below the line**: vermilion hatched "excavated" cost bars
+   - **Accent curve**: cumulative net $ traced from left to right. Crosses ground line at payback month → circled marker labeled `PAYBACK · M19`.
+   - Endpoint labeled `Σ +$X,XXXK`
+   - Bottom: 4 stat columns (Investment, Loss Avoidance, MTTD before→after, MTTR before→after)
 
-  <main>
-    <!-- ツール本体 -->
-  </main>
+5. **Heatmap (col-5)** — `A-301 · PLAN · THREAT × PILLAR`
+   - CSS grid: rows = ZT pillars (7), columns = MITRE-aligned tactics (9).
+   - Cells colored by residual-risk band: `<25` sage, `<50` ochre, `>=50` vermilion, with alpha from `0.12` to `0.82` based on value.
+   - Cells are 44px tall, show the numeric risk value in mono.
+   - Clicking a cell selects its pillar in the elevation chart.
 
-  <ztelier-footer
-    frameworks="MITRE ATT&CK, MITRE ATLAS, CISA ZTMM v2">
-  </ztelier-footer>
+6. **Backlog (col-8)** — `A-401 · SCHEDULE · WORK PACKAGES`
+   - Table: ID (mono gray), Initiative, Pillar (code + name), Status (Chip), Impact (mini bar + number), Cost, Months, Owner.
+   - Tab row at top switches sort key (IMPACT, COST, DURATION)
+   - Row click opens the Policy Editor drawer for that pillar.
 
-  <script src="./common-kit/ztelier-header.js"></script>
-  <script src="./common-kit/ztelier-footer.js"></script>
-  <script src="./common-kit/ztelier-context-loader.js"></script>
-  <script src="./common-kit/ztelier-context-writer.js"></script>
-  <script src="./common-kit/ztelier-context-migrate.js"></script>
-  <script>
-    // ツール本体のロジック
-    const ctx = ZtelierContext.load('aw-20260417-company-a')
-             || ZtelierContext.empty({ company_name: '...' });
-    // ... MAAZ 評価処理 ...
-    ZtelierContext.updateTool(ctx, 'maaz', { completed: true, /* ... */ });
-    ZtelierContext.save(ctx);
-  </script>
-</body>
-</html>
-```
+7. **Alerts (col-4)** — `A-501 · LIVE · TELEMETRY`
+   - "Field Notes" log stream: `HH:MM:SS` · MITRE code chip · description · `→` arrow
+   - Bottom: two MiniStat boxes (MTTR 24H, Open Sev1)
 
----
+8. **Legend (col-12)** — Explains the graphic vocabulary (filled = current, hatched = gap, dashed = target, ground line = tier 0)
 
-## ブランドトークン（設計書 Phase 1 準拠）
+### Policy Editor (slide-over drawer, ~880px wide)
+Opens from the right over a 50% black scrim with 2px blur. Fills 100vh.
+- Header: drawing code, drawing title (e.g. "Data Access Policy"), description, `ESC CLOSE` button, `SIMULATE` primary button.
+- Tabs: `PLAN VIEW` | `RULE TABLE` | `JSON EXPORT`
+- **PLAN VIEW**:
+  - Left 66%: SVG canvas 880×460 with a 20px grid pattern, draggable rectangular nodes (148×44) in four kinds (source/condition/gate/resource), each with its own accent color. Bezier-curved edges with arrowheads connect them.
+  - Right 34%: property inspector — Name (text), Effect (select), Max Risk Score (range slider 0–100), Simulated Impact stat rows.
+  - Clicking a node shows accent corner crosshairs around it.
+- **RULE TABLE**: 5-column rules table (#, Who, Conditions, Resource, Action with status chip)
+- **JSON EXPORT**: pretty-printed JSON of the current policy
 
-### カラー
+### Tweaks panel (bottom-right, 280px fixed)
+Floating panel, not always open. Small `⚙ TWEAKS` trigger when closed.
+- **METAPHOR**: Architecture · Workshop · Painter (three-button group; swaps accent color family + paper tone)
+- **THEME**: Dark · Light
+- **GRID**: On · Off (toggles the global 8px/80px grid)
+- Keyboard: `T` toggle theme, `G` toggle grid, `M` cycle metaphor, `ESC` close drawers/panel
 
-| Token                     | HEX        | 用途                                   |
-|---------------------------|------------|----------------------------------------|
-| `--ztelier-primary`       | `#246CF7`  | Zscaler Blue / CTA / 主要アクセント    |
-| `--ztelier-deep`          | `#001744`  | Zscaler Navy / ヘッダー / 見出し       |
-| `--ztelier-accent`        | `#7BA05B`  | Sage / Ztelier固有の差別化（唯一の有機色・組織の生命感）|
-| `--ztelier-surface`       | `#F7F9FB`  | Paper / 背景（Navy微染めの極薄グレー） |
-| `--ztelier-ink`           | `#2A2D34`  | Charcoal / 本文（純黒回避）            |
-| `--ztelier-muted`         | `#8A8F98`  | Stone / 補助テキスト / 罫線            |
-| `--ztelier-success`       | `#4A7C59`  | 深緑（サルビア系）                     |
-| `--ztelier-warning`       | `#C77F3A`  | 琥珀                                   |
-| `--ztelier-danger`        | `#A84A4A`  | バーガンディ系                         |
+## Interactions & Behavior
+- Selecting a pillar (from elevation chart OR heatmap row) updates the PillarInspector.
+- Clicking a heatmap cell selects that pillar.
+- Clicking `EDIT POLICY` / `OPEN POLICY EDITOR` / a backlog row opens the Policy Editor drawer for the associated pillar.
+- Policy Editor nodes are draggable with mouse; position clamped to canvas bounds.
+- Theme switch toggles `data-theme` on `<html>`. Metaphor switch toggles `data-metaphor`. Grid toggle injects/removes a `<style>` that hides `body::before`/`body::after`.
+- Tweak values persist to `localStorage` under key `ztelier-tweaks` and also mirror to `window.parent.postMessage({ type: '__edit_mode_set_keys', edits })` for the host harness.
+- Sort key in Backlog controls `INITIATIVES.sort(...)`.
+- No animation beyond a blinking live-indicator dot (2s cycle) and subtle hover border-color shifts (120ms).
 
-### 成熟度レベル色
+## State Management
+Kept intentionally flat — single `App` component owns all state:
+- `values`: `{ metaphor, theme, grid }` — Tweaks panel settings, persisted to localStorage
+- `selectedPillar: string` — key of the pillar shown in the inspector
+- `policyPillar: Pillar | null` — pillar the drawer is open for; `null` = closed
+- `tweaksOpen: boolean`
+- Sort key inside BacklogPanel is local state.
+- PolicyEditor holds its own graph/form state.
 
-| Token                | 用途                                   |
-|----------------------|----------------------------------------|
-| `--ztelier-level-1`  | Traditional / Tier 1（危険・未着手）   |
-| `--ztelier-level-2`  | Initial / Tier 2（初期段階）            |
-| `--ztelier-level-3`  | Advanced / Tier 3（進行中）             |
-| `--ztelier-level-4`  | Optimal / Tier 4（最適）                |
+In a production codebase use whatever state approach your team prefers (Zustand, Redux Toolkit, React Context, TanStack Query for server data). Pillars, initiatives, ROI months, alerts, and policy graph should all come from API endpoints.
 
-### ツール別アクセント色
+## Design Tokens
 
-| ツール       | Token                       | 意図                                 |
-|--------------|-----------------------------|--------------------------------------|
-| Amplify      | `--ztelier-tool-amplify`    | Zscaler Blue（標準）                 |
-| MAAZ         | `--ztelier-tool-maaz`       | Zscaler Navy（重厚）                 |
-| Showtoku     | `--ztelier-tool-showtoku`   | Light Blue（柔らか）                 |
-| **Forg**     | `--ztelier-tool-forg`       | **Sage（唯一の有機色＝組織診断の生命感）** |
-| Endeavor     | `--ztelier-tool-endeavor`   | Zscaler Navy（経営層向けの重厚）     |
-| **PUPY Uplift** | `--ztelier-tool-pupy`    | **Stone（無彩色＝内部限定マーカー）** |
+### Color (Architecture metaphor — default)
+**Dark**
+| Token | Value | Use |
+|---|---|---|
+| `--paper-0` | `#0b0d10` | page background |
+| `--paper-1` | `#101318` | panel surface |
+| `--paper-2` | `#161a21` | inset surface |
+| `--paper-3` | `#1b2029` | filled pillar / input base |
+| `--line-0` | `#161b24` | fine 8px grid |
+| `--line-1` | `#222938` | default border |
+| `--line-2` | `#2e3647` | stronger border / table head |
+| `--ink-1` | `#e8ecf2` | primary text |
+| `--ink-2` | `#9aa5b5` | secondary text |
+| `--ink-3` | `#5a6577` | tertiary / caption |
+| `--ink-4` | `#3a4253` | quaternary |
+| `--accent` | `#7fb4ff` | blueprint cyan (primary accent) |
+| `--accent-2` | `#c4ccd8` | graphite |
+| `--risk-high` | `#ff6b57` | vermilion |
+| `--risk-med` | `#ffb347` | ochre |
+| `--risk-low` | `#7fd4a3` | sage |
 
-### タイポグラフィ
+**Light** (off-white with subtle warm beige tint)
+| Token | Value |
+|---|---|
+| `--paper-0` | `#faf8f3` |
+| `--paper-1` | `#f4f1e9` |
+| `--paper-2` | `#ede9dd` |
+| `--paper-3` | `#e4dfd0` |
+| `--line-0` | `#e8e3d4` |
+| `--line-1` | `#d6cfbc` |
+| `--line-2` | `#b8b09a` |
+| `--accent` | `#1e4aa8` |
+| `--risk-high` | `#c4442e` |
+| `--risk-med` | `#b77a1e` |
+| `--risk-low` | `#3c8e5e` |
 
-- 欧文: **Inter**（見出し・本文統一）
-- 和文: **メイリオ**
-- **Arial は意図的に回避**（Zscalerテンプレ差別化のため）
+Inks in light are `#15181d / #4a5162 / #6e7587 / #9aa0ad`.
 
----
+### Metaphor variants
+**Workshop** (moss + warm)
+- Dark papers: `#0f100d / #15161f / #1b1c15 / #22241b`; lines `#262820 / #363a2d`
+- Light papers: `#f7f4e8 / #efead8 / #e3dcc2`
+- Accent: `#8ca87a`, accent-2 `#b8a88a`, trust `#8ca87a`
 
-## API リファレンス
+**Painter** (terracotta + linen)
+- Dark papers: `#141110 / #1a1614 / #221d1a / #29231f`; lines `#33281f / #4a3a2d`
+- Light papers: `#fbf6ec / #f5ecdc / #ebe0c9`
+- Accent: `#d97757`, accent-2 `#e8d2a8`, trust `#d97757`
 
-### `ZtelierHeader`
+### Typography
+- **Display / Headings**: `"Inter Tight", "Helvetica Neue", sans-serif` — `letter-spacing: -0.02em`
+- **Body**: `"Inter", system-ui, -apple-system, "Segoe UI", sans-serif` — 13px / 1.5
+- **Mono (drafting, numerics, labels)**: `"JetBrains Mono", "IBM Plex Mono", "SF Mono", ui-monospace, monospace`
+- **Numbers**: `font-variant-numeric: tabular-nums`
+- **Caps labels**: `text-transform: uppercase; letter-spacing: 0.12–0.14em; font-size: 10px`
 
-#### Web Component
+Type scale (display):
+- hero-metric 72px/0.95/-0.04em
+- big-metric 40px/1/-0.03em
+- H1 44px/1/-0.03em
+- H2 24px/-0.02em
+- H3 20px/-0.02em
 
-```html
-<ztelier-header
-  tool-name="MAAZ"           <!-- 省略可。省略時は "Ztelier" のみ表示 -->
-  tool-version="v4.2.0"      <!-- 省略可 -->
-  tool-color="#001744"       <!-- 省略可。指定時はドット表示 -->
-  about-url="#about">        <!-- 省略可。指定時はAboutリンク表示 -->
-</ztelier-header>
-```
+### Spacing
+- Outer padding per panel: 28–32px; hero 36–40px
+- Grid gutter: 24px
+- Inter-element gap inside panels: 14–20px
+- Dash-grid is `grid-template-columns: repeat(12, 1fr)`
 
-#### プレーン関数
+### Borders / Radii / Shadows
+- **No border-radius anywhere.** Everything is square-cornered by design.
+- **No drop shadows.** Separation comes from borders and crosshairs.
+- Border widths: 1px everywhere (1.5px for ground line, 2px for the bottom of `kbd`).
+- Common dash patterns: `2 4` (grid), `2 3` (target/callout), `4 3` (payback line), `3 3` (gap boundary), `6 4` (mean line).
 
-```javascript
-ZtelierHeader.render(mountElement, {
-  toolName: 'MAAZ',
-  toolVersion: 'v4.2.0',
-  toolColor: '#001744',
-  aboutUrl: '#about'
-});
-```
+### Iconography
+- No emoji, no icon library. Visual vocabulary is:
+  - Corner crosshairs (`+` marks)
+  - Hatch SVG patterns (45° lines, 4–6px spacing) for gaps and excavations
+  - Dimension lines (tick+line+label)
+  - North arrow (circle + filled triangle + "N" label)
+  - Section tags (circled letter like `A-A'`)
+  - Title blocks (grid of mono labels at the bottom of each drawing)
 
-### `ZtelierFooter`
+## Data Model
+See `src/data.jsx`. Shapes:
 
-#### Web Component
+```ts
+type Pillar = {
+  key: string;         // 'ident' | 'devc' | 'netw' | 'appl' | 'data' | 'visi' | 'auto'
+  code: string;        // 'ZT-01'..'ZT-07'
+  name: string;        // 'Identity'
+  jp: string;          // Japanese gloss (optional)
+  current: number;     // 0..5
+  target: number;      // 0..5
+  max: 5;
+  weight: number;      // sum to 1.0
+};
 
-```html
-<ztelier-footer
-  frameworks="MITRE ATT&CK, CISA ZTMM v2, NIST CSF 2.0"  <!-- カンマ区切り -->
-  disclaimer="Ztelier – Independent assessment utility" <!-- 省略可 -->
-  philosophy="true"                                      <!-- 省略可、デフォルトtrue -->
-  about-text="Zscaler Japanのアーキテクトが...">           <!-- 省略可 -->
-</ztelier-footer>
-```
+type Initiative = {
+  id: string;          // 'INIT-0042'
+  code: string;        // 'A-001'
+  name: string;
+  pillar: Pillar['key'];
+  effort: 'S' | 'M' | 'L' | 'XL';
+  impact: number;      // 0..1
+  cost: number;        // thousands USD
+  months: number;
+  status: 'queued' | 'design' | 'in-flight' | 'complete';
+  owner: string;
+};
 
-フッターは **責任分界点の担保**（設計書 Phase 1）として以下を常時表示する：
+type RoiMonth = { m: number; cost: number; saved: number; cumul: number };
 
-1. 思想脚注「セキュリティ対策は手段です…」
-2. ディスクレーマー「Ztelier – Independent assessment utility」
-3. 準拠フレームワーク「Based on MITRE ATT&CK, ...」
+type RoiSummary = {
+  investment: number; avoidance: number; roi_pct: number; payback_months: number;
+  breaches_avoided: number;
+  mttd_before: number; mttd_after: number;
+  mttr_before: number; mttr_after: number;
+};
 
-### `ZtelierContext`（Loader + Writer）
+type Alert = {
+  t: string;           // 'HH:MM:SS'
+  sev: 'high' | 'med' | 'low';
+  code: string;        // MITRE technique id
+  label: string;
+};
 
-#### セッション生成・読込
-
-```javascript
-// 空テンプレート（セッションIDは自動生成、aw-YYYYMMDD-slug 形式）
-const ctx = ZtelierContext.empty({
-  company_name: '株式会社サンプル',
-  created_by: 'se-name'
-});
-
-// localStorage から既存セッション読込
-const ctx = ZtelierContext.load('aw-20260417-company-a');
-
-// ファイルから読込
-const ctx = await ZtelierContext.loadFromFile(fileInput.files[0]);
-
-// 保存済みセッション一覧
-const sessions = ZtelierContext.listSessions();
-```
-
-#### 更新・保存
-
-```javascript
-// ツール単位の書き込み（設計書「読み書き責任」準拠）
-// Forg v4.1.0+ 準拠：変数は1-5スケール、F値は (S×L)/(C×LP)
-ZtelierContext.updateTool(ctx, 'forg', {
-  completed: true,
-  version: '4.3.0',
-  variables: { S: 3.2, L: 4.0, C: 2.4, LP: 2.8 },   // 1-5 スケール
-  F_value: 1.90,                                     // (3.2×4.0)/(2.4×2.8) ≒ 1.90
-  F_status: '変革の停滞帯',
-  industry_average_F: 1.52,
-  deviation_from_average: 0.38,                      // 平均より悪い
-  archetype: {
-    cell_id: 'bl',
-    name_ja: '安穏・思考停止型',
-    description_ja: '危機感・変革意志ともに低く、正常性バイアスが働いている状態...'
-  },
-  dominant_pattern: {
-    pattern_id: 'leadership_weak',                   // 変革意志が弱い
-    pattern_name_ja: '変革意志が弱い',
-    diagnosis_ja: '変革失敗時に痛い目を見る責任者が特定されていない',
-    most_deviated_variable: 'LP'
-  },
-  suggestion: {
-    action_ja: '次のQで、セキュリティ投資の意思決定権を持つ事業責任者を1人指名する',
-    reference_framework: 'Kotter Step 3 (Vision)',
-    common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
-  }
-  // recommendations, contradictions 等は省略可
-});
-
-// パス指定での細粒度更新
-ZtelierContext.update(ctx, 'forg.variables.S', 3.5);
-
-// localStorage 保存（updated_at は自動更新）
-ZtelierContext.save(ctx);
-
-// ファイルとしてダウンロード
-ZtelierContext.exportToFile(ctx);  // 自動ファイル名
-ZtelierContext.exportToFile(ctx, 'custom-name.json');
-
-// クリップボードコピー
-await ZtelierContext.copyToClipboard(ctx);
-
-// 削除
-ZtelierContext.remove('aw-20260417-company-a');
-```
-
-#### バリデーション
-
-```javascript
-const errors = ZtelierContext.validate(ctx);
-if (errors.length === 0) {
-  console.log('OK');
-} else {
-  errors.forEach(e => console.warn(`${e.path}: ${e.message}`));
-}
-
-// 特定ツールが「使える状態」か判定
-if (ZtelierContext.isToolReady(ctx, 'maaz')) {
-  // MAAZ結果を参照して Endeavor 計算を実行
-}
+type PolicyGraph = {
+  nodes: { id: string; kind: 'source'|'condition'|'gate'|'resource'; label: string; x: number; y: number }[];
+  edges: [string, string][];
+};
 ```
 
-### `ZtelierMigrate`
+Heatmap is `number[7][9]`; residual risk 0..100 (higher = worse).
 
-スキーマのバージョンアップが必要になったタイミングで使用。v1.0.0 時点ではマイグレーション対象なし。
+## Assets
+No images. Everything is CSS/SVG. Google Fonts: Inter, Inter Tight, JetBrains Mono.
 
-```javascript
-if (ZtelierMigrate.isMigrationNeeded(ctx)) {
-  const migrated = ZtelierMigrate.migrate(ctx);  // 最新版へ
-}
-```
+## Files in this bundle
+- `Ztelier.html` — entry point, imports Google Fonts + styles + scripts
+- `styles.css` — complete token system + drafting primitives
+- `design-system-notes.md` — the original design spec written before implementation (highest-level source of truth for intent)
+- `src/data.jsx` — seed data (replace with real API integration)
+- `src/drafting.jsx` — Panel, PanelHeader, Crosshairs, TitleBlock, NorthArrow, DimLine, HatchPattern, Chip, SectionTag, Callout
+- `src/elevation.jsx` — `<ElevationChart pillars onSelect selectedKey />`
+- `src/roi-section.jsx` — `<RoiSection months payback />` and `<Heatmap pillars tactics matrix onCellClick />`
+- `src/policy-editor.jsx` — `<PolicyEditor pillar onClose />` drawer
+- `src/app.jsx` — App shell + Topbar + Hero + all panel compositions + Tweaks
 
----
+## Implementation tips
+- Keep the CSS-variable token system: it makes metaphor/theme switching trivial.
+- Extract the "drafting" primitives (Crosshairs, Panel, TitleBlock, Chip, HatchPattern) into a shared internal UI library; they are the visual DNA of the product and will be reused across future screens.
+- Move inline SVG charts (Elevation, RoiSection) to dedicated chart components with props for pillars/months so they can be fed real API data.
+- The PolicyEditor canvas uses hand-rolled drag-and-drop against raw mouse events. In production, consider swapping for React Flow or XYFlow — the node/edge model is already compatible.
+- For the drawer, use your router's modal pattern or a library like Radix Dialog.
+- The Tweaks panel is host-harness-specific (`postMessage __edit_mode_set_keys`). In a real app, replace with a user-settings store.
 
-## 各ツールの読み書き責任（設計書 Phase 4）
+## What's NOT in the prototype (intentional scope boundary)
+- Authentication / multi-tenancy
+- Real data sources (SIEM feed, CMDB, IdP sync)
+- Audit log / change history on policies
+- Mobile-responsive layout — designed for ≥1440px desktop
+- Accessibility pass — developer should add proper ARIA roles for the drawer, heatmap, and draggable nodes (the prototype uses click/mouse only; keyboard-drag and screen-reader summaries need real implementation)
 
-| ツール     | 読み取り                                    | 書き込み             |
-|------------|---------------------------------------------|----------------------|
-| Amplify    | customer                                    | customer, amplify    |
-| MAAZ       | customer, amplify                           | maaz                 |
-| Showtoku   | customer, amplify                           | showtoku             |
-| Forg       | customer                                    | forg                 |
-| Endeavor   | customer, amplify, maaz, showtoku, forg     | endeavor             |
-
-**Endeavorのみ全ツール結果を読み取る**。他は前段ツールまでを読む一方向フロー。ただし逆流対応のため、各ツールは他ツール結果の `completed: false` に耐える設計（`isToolReady()` で判定）。
-
----
-
-## Forg 統合仕様（v1.1.0 実装準拠）
-
-### 4変数の定義
-
-| 記号 | 名称 | 役割 | 設問数 | 意味 |
-|---|---|---|---|---|
-| `S` | Structure / Silo | 分子（摩擦） | 5問 | 縦割り組織の壁。高いほど厚い。 |
-| `L` | Legacy | 分子（摩擦） | 5問 | 技術的負債・資産。高いほど深い。 |
-| `C` | Crisis / Cost | 分母（推進力） | 4問* | 金銭的危機感。高いほど強い。 |
-| `LP` | Leadership | 分母（推進力） | 5問 | 変革断行への意志。高いほど強い。 |
-
-\* C はうち1問が IT予算/売上高の比率から自動算出（`budget_ratio`）。
-
-### F値の計算式
-
-```
-forg = (S × L) / (C × LP)
-```
-
-- 値域: 0 〜 ∞（C × LP = 0 のとき 99、UI上は 10.0+ で打ち切り）
-- 小さいほど**低摩擦**（加速帯）、大きいほど**膠着**
-- 判定:
-  - `forg < 1.0` → 変革の加速帯（緑）
-  - `1.0 ≤ forg < 2.0` → 変革の停滞帯（黄）
-  - `forg ≥ 2.0` → 変革の膠着帯（赤）
-
-### 4パターン診断（v4.3.0 追加、経営層向け1行サマリ）
-
-最も悪い方向に逸脱した変数に基づき1つだけ選択。優先順位: **LP > S > C > L**（経営層の動きやすさ順）。
-
-| pattern_id | pattern_name_ja | トリガ変数 | 状態 |
-|---|---|---|---|
-| `silo_strong` | 縦割りが強い | S 高 | 分子（摩擦） |
-| `legacy_heavy` | 技術的負債が重い | L 高 | 分子（摩擦） |
-| `crisis_weak` | 危機感が弱い | C 低 | 分母（推進力） |
-| `leadership_weak` | 変革意志が弱い | LP 低 | 分母（推進力） |
-
-### 既存の豊富な資産との関係
-
-既存 Forg v4.1.0+ 実装には以下の資産があり、v1.1.0 スキーマはこれらをすべて保持する：
-
-- **`archetype`** — C × LP の4象限診断（Zenith型 / 孤立無援型 / 外圧依存型 / 安穏型）
-- **`contradictions`** — 変数間の矛盾検出6パターン（S×LP乖離＝口先リーダーシップ等）
-- **`recommendations`** — 条件別の動的アクション提言15件、priority 1/2/3 でソート済み
-- **`budget_ratio`** — IT予算/売上比率の自動算出（日本中央値3.2% / グローバル平均5.5% / US平均8.2%）
-
-`dominant_pattern` と `suggestion`（v4.3.0 新設）は、上記の詳細情報とは別に**経営層向けの1行サマリ**として並列配置する。
-
----
-
-## 責任分界点の担保
-
-- ❌ Zscaler ロゴを絶対に入れない（カラーは借りるがロゴは別物）
-- ❌ ツール名に "Zscaler" を冠さない
-- ✅ `<ztelier-footer>` を常時表示（`Ztelier – Independent assessment utility`）
-- ✅ About画面に立て付け説明：「Zscaler Japanのアーキテクトが業務効率化のために個人的に立て付けた内部ツール」
-
----
-
-## 動作確認
-
-`demo.html` をブラウザで開く：
-
-```bash
-# ローカルサーバで開く（CORS 無し推奨）
-python3 -m http.server 8000
-# → http://localhost:8000/demo.html
-```
-
-確認項目：
-- カラーパレット全色表示
-- ヘッダー・フッターの描画
-- ボタン・バッジ・アラート
-- データテーブル（sticky header、ホバー）
-- Context I/O（新規 → Forg書込 → 保存 → 読込 → JSON出力）
-- バリデーション（Forg F値の整合性チェック）
-
----
-
-## バージョニング（3層）
-
-```
-schema_version  : JSONスキーマ自体のバージョン（現在 1.1.0）
-ztelier_version : Ztelier プロジェクト全体（現在 1.1.0）
-各ツール version : 各ツール個別（例: MAAZ v4.2.0, Forg v4.3.0）
-```
-
----
-
-## 参照
-
-- 設計書: `Ztelier_Project_Summary_v1_0.md`
-- フレームワーク: MITRE ATT&CK, MITRE ATLAS, CISA ZTMM v2, NIST CSF 2.0, NIST AI RMF 1.0
-
----
-
-## License
-
-MIT License — see [LICENSE](./LICENSE).
-
----
-
-*Ztelier – Independent assessment utility*
+## Acceptance criteria
+- All 8 dashboard panels render with the elevation chart correctly showing gap hatching and the ROI section showing excavated cost + savings stack + payback crossing.
+- Theme switch + metaphor switch feel instant and persist across reload.
+- Policy Editor drawer opens from backlog row or pillar inspector, nodes drag with the cursor, and the JSON tab reflects the current graph.
+- No drop shadows and no border-radius anywhere. Corner crosshairs are present on every framed panel.
