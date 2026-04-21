@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PUPY Uplift Simulator — Internal Use Only</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#0090d1;--primary-l:#00a8e8;--primary-d:#006da0;--primary-dd:#004d73;
+  --accent:#ff6b2b;--accent-l:#ff8a54;
+  --sf:#ffffff;--sf2:#f0f7fb;--sf3:#e0eef5;--bd:#d0e4ef;
+  --t1:#0a2540;--t2:#4a6a82;--t3:#8ba3b5;
+  --ok:#16a34a;--ok-bg:#f0fdf4;--wn:#d97706;--wn-bg:#fffbeb;--er:#dc2626;--er-bg:#fef2f2;
+  --ff:'Segoe UI','Meiryo',-apple-system,sans-serif;
+  --mono:'Consolas','Meiryo',monospace;
+  --xs:.75rem;--sm:.8125rem;--bs:.875rem;--md:1rem;--lg:1.25rem;--xl:1.5rem;
+  --r:4px;--sh:0 2px 8px rgba(0,0,0,.1);--tr:.15s ease;
+}
+body{font-family:var(--ff);font-size:var(--bs);line-height:1.6;color:var(--t1);background:var(--sf2)}
+.app{max-width:1440px;margin:0 auto;background:var(--sf);min-height:100vh;box-shadow:var(--sh)}
+.hd{background:linear-gradient(135deg,var(--primary-dd),var(--primary-d));color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.hd h1{font-size:var(--xl);font-weight:700}.hd h1 span{font-weight:400;opacity:.8;font-size:var(--sm);margin-left:8px}
+.hd-badges{display:flex;gap:8px}.badge{background:var(--er);color:#fff;font-size:var(--xs);font-weight:700;padding:2px 10px;border-radius:var(--r)}.badge-ver{background:rgba(255,255,255,.15);color:#fff;font-size:10px;padding:2px 8px;border-radius:var(--r);border:1px solid rgba(255,255,255,.25)}
+
+.layout{display:flex;min-height:calc(100vh - 56px)}
+.side{width:360px;min-width:360px;border-right:1px solid var(--bd);overflow-y:auto;background:var(--sf)}
+.main{flex:1;overflow-y:auto;padding:24px}
+
+.sp{padding:16px;border-bottom:1px solid var(--bd)}
+.sp-title{font-size:var(--sm);font-weight:700;color:var(--primary-d);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.step-num{background:var(--primary);color:#fff;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:var(--sm);font-weight:600;color:var(--t1);margin-bottom:3px}
+.fi{width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:var(--r);font-size:var(--bs);color:var(--t1);background:var(--sf);font-family:var(--ff)}
+.fi:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(0,144,209,.15)}
+
+/* Platform radio */
+.plat-opts{display:flex;flex-direction:column;gap:6px}
+.plat-opt{display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all var(--tr);font-size:var(--sm)}
+.plat-opt:hover{border-color:var(--primary-l);background:var(--sf2)}
+.plat-opt.on{border-color:var(--primary);background:var(--sf3)}
+.plat-opt input{accent-color:var(--primary);flex-shrink:0}
+.plat-opt-name{font-weight:700;color:var(--t1)}
+.plat-opt-desc{font-size:var(--xs);color:var(--t3);margin-top:1px}
+
+/* Add-on list */
+.own-group{margin-bottom:8px}
+.own-group-hd{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;padding:4px 0;border-bottom:1px solid var(--sf3)}
+.own-item{display:flex;align-items:center;gap:6px;font-size:var(--sm);padding:4px 4px;cursor:pointer;border-radius:var(--r);transition:background var(--tr)}
+.own-item:hover{background:var(--sf2)}
+.own-item input{accent-color:var(--ok);flex-shrink:0}
+.own-item.on{background:var(--ok-bg);font-weight:600}
+.own-meter{font-size:9px;margin-left:auto;color:var(--t3);padding:1px 4px;background:var(--sf3);border-radius:2px}
+.own-count{font-size:10px;color:#fff;background:var(--ok);padding:1px 6px;border-radius:8px;font-weight:700;margin-left:auto}
+
+/* UC categories */
+.cat-hd{display:flex;align-items:center;gap:6px;padding:10px 16px;cursor:pointer;border-bottom:1px solid var(--bd);transition:background var(--tr);user-select:none}
+.cat-hd:hover{background:var(--sf2)}
+.cat-ic{width:24px;height:24px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;flex-shrink:0}
+.cat-n{flex:1;font-weight:600;font-size:var(--bs)}.cat-cnt{font-size:10px;color:#fff;background:var(--accent);padding:1px 6px;border-radius:8px;font-weight:700;display:none}
+.cat-arrow{font-size:10px;color:var(--t3);transition:transform .2s}.cat-arrow.open{transform:rotate(90deg)}
+.cat-body{display:none;border-bottom:1px solid var(--bd)}.cat-body.open{display:block}
+.uc{padding:8px 16px 8px 46px;cursor:pointer;border-bottom:1px solid var(--sf3);display:flex;align-items:flex-start;gap:8px;transition:background var(--tr);font-size:var(--sm)}
+.uc:hover{background:var(--sf2)}.uc.sel{background:var(--sf3)}
+.uc input{margin-top:2px;accent-color:var(--accent);flex-shrink:0}
+.uc-info{flex:1}.uc-t{font-weight:600}.uc-sols{display:flex;flex-wrap:wrap;gap:2px;margin-top:3px}
+.sol-tag{font-size:9px;padding:1px 5px;border-radius:2px;font-weight:600;background:var(--sf2);color:var(--primary-d);border:1px solid var(--bd)}
+.sol-tag.inc{background:var(--ok-bg);color:var(--ok);border-color:#bbf7d0}
+.sol-tag.tbd{background:var(--wn-bg);color:var(--wn);border-color:#fde68a}
+.sol-tag.owned{background:#e0e7ff;color:#4338ca;border-color:#c7d2fe;text-decoration:line-through;opacity:.7}
+
+/* Results */
+.res-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.res-card{padding:16px;border:1px solid var(--bd);border-radius:var(--r);text-align:center}
+.res-label{font-size:var(--xs);color:var(--t2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.res-val{font-size:1.8rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--primary-dd)}
+.res-val.up{color:var(--ok)}.res-val.accent{color:var(--accent)}
+.res-sub{font-size:var(--xs);color:var(--t3);margin-top:2px}
+.sec-title{font-size:var(--md);font-weight:600;color:var(--primary-d);margin:24px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--primary);display:inline-block}
+.sec-title:first-of-type{margin-top:0}
+table.dt{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--bs);margin-bottom:16px}
+table.dt thead th{background:var(--sf2);color:var(--t1);font-weight:600;font-size:var(--sm);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:2px solid var(--primary);text-align:left;position:sticky;top:0;z-index:1}
+table.dt tbody td{padding:8px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+table.dt tbody tr:hover{background:var(--sf2)}
+.num{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;font-family:var(--mono)}
+.price-input{width:90px;padding:4px 6px;border:1px solid var(--bd);border-radius:var(--r);font-size:var(--bs);font-family:var(--mono);text-align:right}
+.price-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(0,144,209,.15)}
+.price-input.filled{border-color:var(--ok);background:var(--ok-bg)}
+.tbd-label{font-size:var(--xs);color:var(--wn);font-weight:600}
+.meter-tag{font-size:9px;padding:1px 5px;border-radius:2px;font-weight:600;background:var(--sf3);color:var(--t2)}
+.delta-tag{font-size:9px;padding:1px 6px;border-radius:2px;font-weight:700;background:var(--accent);color:#fff}
+.covered-tag{font-size:9px;padding:1px 6px;border-radius:2px;font-weight:700;background:var(--ok-bg);color:var(--ok)}
+.empty{text-align:center;padding:60px 24px;color:var(--t2)}.empty h3{color:var(--primary-d);margin-bottom:8px;font-size:var(--lg)}
+.steps{display:flex;gap:20px;justify-content:center;margin-top:24px}.step-box{padding:16px;border:1px solid var(--bd);border-radius:var(--r);width:180px;text-align:left}.step-box .sn{font-size:var(--sm);font-weight:700;color:var(--primary);margin-bottom:4px}.step-box .sd{font-size:var(--xs);color:var(--t2)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:none;border-radius:var(--r);font-size:var(--sm);font-weight:600;cursor:pointer;font-family:var(--ff)}
+.btn-s{background:transparent;color:var(--primary);border:1px solid var(--primary)}.btn-s:hover{background:var(--sf2)}
+.btn-d{background:var(--er);color:#fff}.btn-d:hover{background:#b91c1c}
+.actions{display:flex;gap:8px;margin-top:16px}
+@media print{body{background:#fff}.app{box-shadow:none}.side{display:none}.hd .badge,.hd .badge-ver{display:none}.price-input{border:none;background:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="hd">
+  <h1>PUPY Uplift Simulator<span>— Expand Revenue Accelerator</span></h1>
+  <div class="hd-badges"><span class="badge">INTERNAL USE ONLY</span><span class="badge-ver">v0.3 — FY26</span></div>
+</div>
+<div class="layout">
+
+<div class="side">
+  <div class="sp">
+    <div class="sp-title"><span class="step-num">0</span>案件パラメータ</div>
+    <div class="fg"><label class="fl">ユーザー数</label><input class="fi" type="number" id="users" value="1000" min="1" step="100" oninput="calc()"></div>
+    <div class="fg"><label class="fl">パートナー値引率 (%)</label><input class="fi" type="number" id="discount" value="0" min="0" max="100" step="1" oninput="calc()"></div>
+  </div>
+
+  <div class="sp">
+    <div class="sp-title"><span class="step-num">1</span>ベースプラットフォーム</div>
+    <div class="plat-opts" id="platOpts"></div>
+  </div>
+
+  <div class="sp" id="addonPanel">
+    <div class="sp-title"><span class="step-num">+</span>追加購入済みライセンス<span class="own-count" id="ownCnt" style="display:none">0</span></div>
+    <div id="addonList"></div>
+  </div>
+
+  <div style="border-bottom:1px solid var(--bd);padding:10px 16px;background:var(--sf2)">
+    <div class="sp-title" style="margin:0"><span class="step-num">2</span>提案ユースケース</div>
+  </div>
+  <div id="categories"></div>
+</div>
+
+<div class="main">
+  <div class="empty" id="emptyState">
+    <h3>PUPY Uplift Simulator</h3>
+    <p>既存構成を入力し、ユースケースを選択して<br>アップセルに必要なモジュールを特定します</p>
+    <div class="steps">
+      <div class="step-box"><div class="sn">Step 1</div><div class="sd">ベースPF＋既存ライセンスを選択</div></div>
+      <div class="step-box"><div class="sn">Step 2</div><div class="sd">Amplifyユースケースを選択</div></div>
+      <div class="step-box"><div class="sn">Result</div><div class="sd">差分モジュール表示＋PUPY入力</div></div>
+    </div>
+  </div>
+  <div id="results" style="display:none"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+// === PLATFORM DEFINITIONS ===
+const PLATFORMS = [
+  {id:"platform", name:"Zscaler Platform", desc:"ZIA + ZPA + Data Protection + Standards全部入り",
+   includes:["ZIA","ZPA","ZDX Std","ZIA DLP","ZIA ATP","ZIA CTP","SSL Inspection","CASB 1-app","Risk360","Deception Std","Resilience","ZPA PSE","NSS","ZT Branch Std","ZT Cloud Std","PRA Std"]},
+  {id:"essentials", name:"Essentials Platform", desc:"ZIA + ZPA(5%) + 限定Standards",
+   includes:["ZIA","ZDX Std","ZIA ATP","SSL Inspection","CASB 1-app","NSS","ZT Cloud Std"]},
+  {id:"zia", name:"ZIA 単体", desc:"Internet Access のみ",
+   includes:["ZIA","SSL Inspection"]},
+  {id:"zpa", name:"ZPA 単体", desc:"Private Access のみ",
+   includes:["ZPA"]}
+];
+
+// Solution → what platform feature covers it
+const PLATFORM_COVERS = {
+  "ZIA":["ZIA"],"ZPA":["ZPA"],"ZDX":["ZDX Std"],
+  "ZIA DLP":["ZIA DLP"],"ZIA Advanced Threat Protection":["ZIA ATP"],
+  "ZIA Cyber Threat Protection":["ZIA CTP"],"ZIA Inline Inspection":["SSL Inspection"],
+  "ZIA CASB (Inline)":["CASB 1-app"],"Risk360":["Risk360"],
+  "Deception":["Deception Std"],"Zscaler Resilience":["Resilience"],
+  "ZPA Private Service Edge":["ZPA PSE"],"Zscaler Log Integration":["NSS"]
+};
+
+// Add-on modules (purchasable)
+const ADDONS = {
+  "Sandbox":{m:"pupy",cat:"Cyber Threat Protection",note:"Sandbox Advanced"},
+  "Firewall Advanced":{m:"pupy",cat:"Cyber Threat Protection"},
+  "Zero Trust Browser":{m:"pupy",cat:"Cyber Threat Protection",note:"Advanced"},
+  "Browser Isolation":{m:"pupy",cat:"Cyber Threat Protection",alias:"Zero Trust Browser"},
+  "Email DLP":{m:"pupy",cat:"Data Protection"},
+  "Endpoint DLP":{m:"pupy",cat:"Data Protection"},
+  "SaaS Security":{m:"pupy",cat:"Data Protection",note:"API CASB+SSPM+SC"},
+  "SSPM":{m:"pupy",cat:"Data Protection",alias:"SaaS Security"},
+  "SaaS Supply Chain Security":{m:"pupy",cat:"Data Protection",alias:"SaaS Security"},
+  "CASB":{m:"pupy",cat:"Data Protection",alias:"SaaS Security"},
+  "DSPM":{m:"pupy",cat:"Data Protection"},
+  "ZIA GenAI App Control":{m:"pupy",cat:"Data Protection",note:"GenAI DLP"},
+  "DLP (全チャネル)":{m:"pupy",cat:"Data Protection",note:"Email+EP+Web"},
+  "Segmentation":{m:"pupy",cat:"Private Access",note:"User Seg"},
+  "App Protection":{m:"pupy",cat:"Private Access"},
+  "Microsegmentation":{m:"pupy",cat:"Zero Trust Cloud"},
+  "Workload Communications":{m:"gb",cat:"Zero Trust Cloud",note:"$/GB"},
+  "Workload Segmentation":{m:"gb",cat:"Zero Trust Cloud",alias:"Workload Communications"},
+  "Zero Trust Branch":{m:"site",cat:"Zero Trust Branch",note:"$/Site Adv"},
+  "Zero Trust SD-WAN":{m:"site",cat:"Zero Trust Branch",alias:"Zero Trust Branch"},
+  "Device Segmentation":{m:"site",cat:"Zero Trust Branch",note:"$/Site"},
+  "Privileged Remote Access":{m:"pupy",cat:"PRA",note:"Std超過分"},
+  "ZDX Advanced":{m:"pupy",cat:"Digital Experience"},
+  "ZDX Advanced Plus":{m:"pupy",cat:"Digital Experience",note:"Copilot含む"},
+  "ZDX Copilot":{m:"pupy",cat:"Digital Experience",alias:"ZDX Advanced Plus"},
+  "ZDX Network Intelligence":{m:"pupy",cat:"Digital Experience",alias:"ZDX Advanced Plus"},
+  "ZDX Managed Monitoring":{m:"pupy",cat:"Digital Experience",alias:"ZDX Advanced Plus"},
+  "Deception Advanced":{m:"pupy",cat:"Security Operations"},
+  "UVM":{m:"pupy",cat:"Security Operations",note:"Unified Vuln Mgmt"},
+  "Data Fabric for Security":{m:"pupy",cat:"Security Operations",alias:"UVM"},
+  "Asset Exposure Management":{m:"asset",cat:"Security Operations",note:"$/Asset"},
+  "B2B Exchange":{m:"tb",cat:"B2B",note:"$/TB"},
+  "Partner ZTNA":{m:"pupy",cat:"B2B",tbd:true,note:"SKU TBD"},
+  "AI Visibility & Control":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD"},
+  "AI Protect":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD"},
+  "AI Runtime Guardrails":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD"},
+  "AI Red Teaming":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD"},
+  "AI Asset Management":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD"},
+  "AI-SPM":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD"},
+  "MCP Gateway":{m:"pupy",cat:"AI Security",tbd:true,note:"SKU TBD FY27"},
+};
+
+const CATEGORIES=[
+  {id:"sa",n:"セキュアアクセス",c:"#0090d1",uc:[
+    {id:"sa1",t:"VPN→ZTNA移行",s:["ZPA","ZPA Private Service Edge","Browser Isolation"]},
+    {id:"sa2",t:"リモートワーカーの保護",s:["ZIA","ZPA","ZDX","Zero Trust Browser"]},
+    {id:"sa3",t:"M&A時のアクセス統合",s:["ZPA","ZIA","B2B Exchange"]},
+    {id:"sa4",t:"特権アクセス管理",s:["Privileged Remote Access","Deception"]},
+    {id:"sa5",t:"BYOD/非管理端末のアクセス",s:["Zero Trust Browser","Browser Isolation","ZPA"]},
+    {id:"sa6",t:"拠点ネットワークのZT化",s:["Zero Trust Branch","Zero Trust SD-WAN","Device Segmentation"]}]},
+  {id:"tp",n:"脅威防御",c:"#dc2626",uc:[
+    {id:"tp1",t:"ランサムウェア対策",s:["ZIA Advanced Threat Protection","Sandbox","Microsegmentation","Deception"]},
+    {id:"tp2",t:"標的型攻撃（APT）対策",s:["ZIA Cyber Threat Protection","Sandbox","Deception","Risk360"]},
+    {id:"tp3",t:"ラテラルムーブメント防止",s:["Microsegmentation","ZPA","Zero Trust Branch","Deception"]},
+    {id:"tp4",t:"SOC効率化・自動化",s:["Data Fabric for Security","Risk360","Zscaler Log Integration"]},
+    {id:"tp5",t:"フィッシング・BEC対策",s:["ZIA Advanced Threat Protection","Browser Isolation","Zero Trust Browser"]}]},
+  {id:"dp",n:"データ保護",c:"#d97706",uc:[
+    {id:"dp1",t:"機密データの外部流出防止",s:["ZIA DLP","Email DLP","Endpoint DLP","DSPM"]},
+    {id:"dp2",t:"BYOD環境のデータ保護",s:["Browser Isolation","Zero Trust Browser","CASB"]},
+    {id:"dp3",t:"クラウドストレージのデータ保護",s:["DSPM","CASB"]}]},
+  {id:"cs",n:"クラウド/SaaS制御",c:"#2563eb",uc:[
+    {id:"cs1",t:"シャドーIT対策",s:["ZIA CASB (Inline)","SaaS Security"]},
+    {id:"cs2",t:"SaaS設定ミスの検出",s:["SSPM","SaaS Supply Chain Security"]},
+    {id:"cs3",t:"マルチクラウドワークロード保護",s:["Workload Communications","Workload Segmentation","DSPM"]}]},
+  {id:"dx",n:"デジタルエクスペリエンス",c:"#16a34a",uc:[
+    {id:"dx1",t:"リモートワーク品質の可視化",s:["ZDX","ZDX Copilot"]},
+    {id:"dx2",t:"SaaSパフォーマンス監視",s:["ZDX Advanced","ZDX Advanced Plus"]},
+    {id:"dx3",t:"ISP品質の把握と最適化",s:["ZDX Network Intelligence","ZDX Managed Monitoring"]}]},
+  {id:"ai",n:"AIセキュリティ",c:"#7c3aed",uc:[
+    {id:"ai1",t:"生成AIの利用可視化・制御",s:["AI Visibility & Control","ZIA GenAI App Control","AI-SPM"]},
+    {id:"ai2",t:"AI開発環境の保護",s:["AI Protect","AI Runtime Guardrails","AI Red Teaming"]},
+    {id:"ai3",t:"AI資産の棚卸し・ガバナンス",s:["AI Asset Management","AI-SPM","AI Visibility & Control"]},
+    {id:"ai4",t:"エージェンティックAIのセキュリティ",s:["AI Runtime Guardrails","AI Red Teaming","MCP Gateway"]}]},
+  {id:"ot",n:"OT/IoTセキュリティ",c:"#059669",uc:[
+    {id:"ot1",t:"工場/OT環境のセキュリティ",s:["Zero Trust Branch","Device Segmentation","Privileged Remote Access"]},
+    {id:"ot2",t:"IoTデバイスの可視化・制御",s:["Device Segmentation","Zero Trust Branch"]},
+    {id:"ot3",t:"請負業者のOTリモートアクセス",s:["Privileged Remote Access","Zero Trust Branch","ZPA"]}]},
+  {id:"sc",n:"サプライチェーン対策",c:"#b45309",uc:[
+    {id:"sc1",t:"委託先アクセス管理",s:["ZPA","Zero Trust Browser","Browser Isolation","Deception"]},
+    {id:"sc2",t:"サプライチェーン攻撃防御",s:["ZIA Inline Inspection","Microsegmentation","SaaS Supply Chain Security","Sandbox"]},
+    {id:"sc3",t:"B2B安全通信基盤",s:["B2B Exchange","ZPA","Zero Trust SD-WAN"]}]},
+  {id:"ir",n:"インフラレジリエンス",c:"#0891b2",uc:[
+    {id:"ir1",t:"拠点障害時の事業継続",s:["Zscaler Resilience","ZPA Private Service Edge","Zero Trust SD-WAN"]},
+    {id:"ir2",t:"クラウド障害への備え",s:["Zscaler Resilience","ZPA Private Service Edge"]}]},
+  {id:"ap",n:"資産管理・態勢管理",c:"#6d28d9",uc:[
+    {id:"ap1",t:"IT資産の可視化・リスク評価",s:["Asset Exposure Management","Risk360","UVM"]},
+    {id:"ap2",t:"クラウド/SaaS態勢管理",s:["DSPM","SSPM","AI-SPM"]},
+    {id:"ap3",t:"統合リスクスコアリング",s:["Risk360","Data Fabric for Security","Asset Exposure Management"]}]},
+  {id:"cg",n:"コンプライアンス",c:"#475569",uc:[
+    {id:"cg1",t:"ゼロトラスト成熟度の向上",s:["Risk360","Zscaler Log Integration"]},
+    {id:"cg2",t:"業界規制への対応",s:["DLP (全チャネル)","DSPM","Data Fabric for Security"]}]}
+];
+
+// State
+let curPlatform = null;
+let ownedAddons = new Set();
+let selUC = new Set();
+let prices = {};
+
+function canonical(s){const a=ADDONS[s];return(a&&a.alias)||s;}
+function isCoveredByPlatform(sol){
+  if(!curPlatform) return false;
+  const pf=PLATFORMS.find(p=>p.id===curPlatform);
+  if(!pf) return false;
+  const covers=PLATFORM_COVERS[sol];
+  if(!covers) return false;
+  return covers.every(c=>pf.includes.includes(c));
+}
+function isOwnedAddon(sol){return ownedAddons.has(canonical(sol));}
+function isCovered(sol){return isCoveredByPlatform(sol)||isOwnedAddon(sol);}
+
+// Build platform radio
+function buildPlats(){
+  document.getElementById('platOpts').innerHTML=PLATFORMS.map(p=>
+    `<label class="plat-opt ${curPlatform===p.id?'on':''}" id="po-${p.id}" onclick="selectPlat('${p.id}')">
+      <input type="radio" name="plat" ${curPlatform===p.id?'checked':''}>
+      <div><div class="plat-opt-name">${p.name}</div><div class="plat-opt-desc">${p.desc}</div></div>
+    </label>`
+  ).join('');
+}
+
+function selectPlat(id){
+  curPlatform=id;
+  document.querySelectorAll('.plat-opt').forEach(e=>e.classList.remove('on'));
+  document.getElementById('po-'+id)?.classList.add('on');
+  document.querySelector('#po-'+id+' input').checked=true;
+  updateSolTags();render();
+}
+
+// Build add-on list
+function buildAddons(){
+  const groups={};
+  Object.entries(ADDONS).forEach(([k,v])=>{if(v.alias)return;const c=v.cat;if(!groups[c])groups[c]=[];groups[c].push(k);});
+  document.getElementById('addonList').innerHTML=Object.entries(groups).map(([cat,mods])=>{
+    const items=mods.map(m=>{const a=ADDONS[m];
+      return `<label class="own-item" id="ao-${CSS.escape(m)}"><input type="checkbox" onchange="toggleAddon('${m.replace(/'/g,"\\'")}',this.checked)">${m}<span class="own-meter">${a.m}</span></label>`;
+    }).join('');
+    return `<div class="own-group"><div class="own-group-hd">${cat}</div>${items}</div>`;
+  }).join('');
+}
+
+function toggleAddon(m,checked){
+  const c=canonical(m);
+  if(checked) ownedAddons.add(c); else ownedAddons.delete(c);
+  document.getElementById('ao-'+CSS.escape(m))?.classList.toggle('on',checked);
+  const cnt=ownedAddons.size;
+  const ce=document.getElementById('ownCnt');ce.textContent=cnt;ce.style.display=cnt>0?'':'none';
+  updateSolTags();render();
+}
+
+// Build categories
+function buildCats(){
+  document.getElementById('categories').innerHTML=CATEGORIES.map(cat=>{
+    const ucs=cat.uc.map(u=>{
+      const sols=u.s.map(s=>{
+        const a=ADDONS[s];const cls=isCoveredByPlatform(s)?'inc':a?.tbd?'tbd':isOwnedAddon(s)?'owned':'';
+        return `<span class="sol-tag ${cls}" data-sol="${s}">${s}</span>`;
+      }).join('');
+      return `<div class="uc" id="uc-${u.id}" onclick="toggleUC('${u.id}')">
+        <input type="checkbox" ${selUC.has(u.id)?'checked':''} onclick="event.stopPropagation();toggleUC('${u.id}')">
+        <div class="uc-info"><div class="uc-t">${u.t}</div><div class="uc-sols">${sols}</div></div></div>`;
+    }).join('');
+    return `<div class="cat-hd" onclick="toggleCat('${cat.id}')"><div class="cat-ic" style="background:${cat.c}">${cat.id.toUpperCase()}</div><div class="cat-n">${cat.n}</div><span class="cat-cnt" id="cnt-${cat.id}">0</span><span class="cat-arrow" id="arr-${cat.id}">▶</span></div><div class="cat-body" id="body-${cat.id}">${ucs}</div>`;
+  }).join('');
+}
+
+function updateSolTags(){
+  document.querySelectorAll('.sol-tag[data-sol]').forEach(el=>{
+    const s=el.dataset.sol;const a=ADDONS[s];
+    el.className='sol-tag'+(isCoveredByPlatform(s)?' inc':a?.tbd?' tbd':isOwnedAddon(s)?' owned':'');
+  });
+}
+
+function toggleCat(id){document.getElementById('body-'+id).classList.toggle('open');document.getElementById('arr-'+id).classList.toggle('open');}
+function toggleUC(id){
+  if(selUC.has(id))selUC.delete(id);else selUC.add(id);
+  const el=document.getElementById('uc-'+id);el?.classList.toggle('sel',selUC.has(id));
+  const cb=el?.querySelector('input');if(cb)cb.checked=selUC.has(id);
+  CATEGORIES.forEach(cat=>{const cnt=cat.uc.filter(u=>selUC.has(u.id)).length;const ce=document.getElementById('cnt-'+cat.id);if(ce){ce.textContent=cnt;ce.style.display=cnt>0?'':'none'}});
+  render();
+}
+
+function onPrice(sku,val){prices[sku]=parseFloat(val)||null;calc();}
+
+function getDelta(){
+  const req=new Set();
+  CATEGORIES.forEach(cat=>cat.uc.forEach(u=>{if(selUC.has(u.id))u.s.forEach(s=>req.add(s));}));
+  const deltaMap=new Map(),covPF=[],covOwn=[];
+  req.forEach(s=>{
+    if(isCoveredByPlatform(s)){covPF.push(s);return;}
+    const c=canonical(s);
+    if(isOwnedAddon(s)){covOwn.push(c);return;}
+    const a=ADDONS[c]||ADDONS[s];
+    if(!a)return;
+    if(!deltaMap.has(c))deltaMap.set(c,{sku:c,mod:a});
+  });
+  return{delta:[...deltaMap.values()],covPF:[...new Set(covPF)],covOwn:[...new Set(covOwn)]};
+}
+
+function render(){
+  if(selUC.size===0){document.getElementById('emptyState').style.display='';document.getElementById('results').style.display='none';return;}
+  document.getElementById('emptyState').style.display='none';document.getElementById('results').style.display='';
+
+  const{delta,covPF,covOwn}=getDelta();
+  const addOns=delta.filter(d=>!d.mod.tbd);
+  const tbd=delta.filter(d=>d.mod.tbd);
+
+  const aoRows=addOns.map(d=>{const cp=prices[d.sku];const f=cp!=null&&cp>0;
+    return `<tr><td><strong>${d.sku}</strong> <span class="delta-tag">NEW</span></td><td>${d.mod.cat}</td><td><span class="meter-tag">${d.mod.m}</span></td>
+    <td><input type="number" class="price-input ${f?'filled':''}" value="${cp!=null?cp:''}" placeholder="単価" min="0" step="0.01" oninput="onPrice('${d.sku.replace(/'/g,"\\'")}',this.value)"></td>
+    <td class="num" id="dc-${CSS.escape(d.sku)}">—</td><td class="num" id="ar-${CSS.escape(d.sku)}">—</td>
+    <td style="font-size:var(--xs);color:var(--t3)">${d.mod.note||''}</td></tr>`;}).join('');
+
+  const tbdR=tbd.map(d=>`<tr><td><strong>${d.sku}</strong></td><td>${d.mod.cat}</td><td><span class="meter-tag">${d.mod.m}</span></td><td><span class="tbd-label">SKU TBD</span></td><td>—</td><td>—</td><td style="font-size:var(--xs);color:var(--t3)">${d.mod.note||''}</td></tr>`).join('');
+
+  document.getElementById('results').innerHTML=`
+    <div class="res-grid">
+      <div class="res-card"><div class="res-label">PUPY Uplift（リスト）</div><div class="res-val accent" id="k-list">—</div><div class="res-sub">追加 PUPY</div></div>
+      <div class="res-card"><div class="res-label">値引後 PUPY</div><div class="res-val" id="k-disc">—</div><div class="res-sub" id="k-ds">—</div></div>
+      <div class="res-card"><div class="res-label">年間 ARR 増分</div><div class="res-val up" id="k-arr">—</div><div class="res-sub" id="k-as">—</div></div>
+      <div class="res-card"><div class="res-label">アップセル対象</div><div class="res-val" id="k-cnt">${delta.length}</div><div class="res-sub" id="k-cs">${tbd.length?tbd.length+' TBD':delta.length+'件'}</div></div>
+    </div>
+    ${aoRows||tbdR?`<div class="sec-title">アップセル対象（差分モジュール）</div><table class="dt"><thead><tr><th>モジュール</th><th>カテゴリ</th><th>課金</th><th>PUPY単価 ($)</th><th>値引後</th><th>年間ARR</th><th>備考</th></tr></thead><tbody>${aoRows}${tbdR}</tbody></table>`:'<p style="color:var(--ok);font-weight:600;margin-bottom:16px">選択したユースケースは既存ライセンスで全てカバー済みです。</p>'}
+    ${covOwn.length?`<div class="sec-title">既存ライセンスでカバー済み</div><table class="dt"><thead><tr><th>モジュール</th><th>ステータス</th></tr></thead><tbody>${covOwn.map(s=>`<tr><td>${s}</td><td><span class="covered-tag">購入済み</span></td></tr>`).join('')}</tbody></table>`:''}
+    ${covPF.length?`<div class="sec-title">ベースPFに含む</div><table class="dt"><thead><tr><th>モジュール</th><th>ステータス</th></tr></thead><tbody>${[...new Set(covPF)].map(s=>`<tr><td>${s}</td><td><span class="covered-tag">${curPlatform==='platform'?'Platform':'Essentials'} 含む</span></td></tr>`).join('')}</tbody></table>`:''}
+    <div class="actions no-print"><button class="btn btn-s" onclick="window.print()">印刷 / PDF</button><button class="btn btn-d" onclick="resetAll()">リセット</button></div>`;
+  calc();
+}
+
+function calc(){
+  if(selUC.size===0)return;
+  const users=parseInt(document.getElementById('users').value)||0;
+  const disc=parseFloat(document.getElementById('discount').value)||0;
+  const{delta}=getDelta();
+  let total=0,filled=0,pupyN=0;
+  delta.filter(d=>!d.mod.tbd).forEach(d=>{
+    const p=prices[d.sku],de=document.getElementById('dc-'+CSS.escape(d.sku)),ae=document.getElementById('ar-'+CSS.escape(d.sku));
+    if(d.mod.m==='pupy'){pupyN++;
+      if(p>0){filled++;total+=p;const dp=p*(1-disc/100),ar=dp*users;if(de)de.textContent=`$${dp.toFixed(2)}`;if(ae)ae.textContent=`$${ar.toLocaleString()}`;}
+      else{if(de)de.textContent='—';if(ae)ae.textContent='—';}
+    }else{if(de)de.textContent='個別';if(ae)ae.textContent='要見積';}
+  });
+  const dt=total*(1-disc/100),at=dt*users,tbdN=delta.filter(d=>d.mod.tbd).length;
+  const e=id=>document.getElementById(id);
+  if(e('k-list'))e('k-list').textContent=total>0?`+$${total.toFixed(0)}`:'—';
+  if(e('k-disc'))e('k-disc').textContent=total>0?`$${dt.toFixed(2)}`:'—';
+  if(e('k-ds'))e('k-ds').textContent=`値引率 ${disc}%`;
+  if(e('k-arr'))e('k-arr').textContent=at>0?`$${at.toLocaleString()}`:'—';
+  if(e('k-as'))e('k-as').textContent=`${users.toLocaleString()} users`;
+  if(e('k-cs'))e('k-cs').textContent=`入力 ${filled}/${pupyN}${tbdN?' ・TBD '+tbdN:''}`;
+}
+
+function resetAll(){curPlatform=null;ownedAddons.clear();selUC.clear();prices={};buildPlats();buildAddons();buildCats();document.getElementById('ownCnt').style.display='none';render();}
+
+buildPlats();buildAddons();buildCats();
+</script>
+</body>
+</html>
