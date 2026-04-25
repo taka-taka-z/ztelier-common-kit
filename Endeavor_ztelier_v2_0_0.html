@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Endeavor v1.4.0 — Zero Trust ROI Atelier</title>
+<title>Endeavor v1.5.0 — Zero Trust ROI Atelier</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -1198,10 +1198,15 @@ const STATE = {
 };
 
 
+/* v1.5.0: 起動ログ — ブラウザキャッシュ確認用 */
+if (typeof console !== 'undefined') {
+  console.info('%c[Endeavor v1.5.0]%c QA監査C1-C5修正版 起動 (build: ' + new Date().toISOString().slice(0,10) + ')',
+    'color:#7fb4ff;font-weight:700', 'color:inherit');
+}
 /* v1.4.0 QA hook: expose STATE to window when ?qa=1 in URL (debug-only, no production overhead) */
 if (typeof window !== 'undefined' && /[?&]qa=1\b/.test(window.location.search)) {
   window.__STATE = STATE;
-  console.info('[Endeavor v1.4.0] QA mode: window.__STATE exposed for inspection');
+  console.info('[Endeavor v1.5.0] QA mode: window.__STATE exposed for inspection');
 }
 const DLP_TECHNIQUES = ['T1048','T1567','T1027','T1041','T1078','T1566','T1486'];
 
