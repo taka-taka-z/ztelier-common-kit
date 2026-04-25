@@ -1061,6 +1061,11 @@ const STATE = {
    * 分母ゼロ回避のため C×L' には微小値 ε=0.01 を下限とする。
    */
   forgFrictionEpsilon: 0.01,   /* 分母ゼロ回避用の微小値 */
+  /* v1.5.0 (QA Audit C4 fix): Forg未連携時の摩擦係数フォールバック値
+   * 旧: forgLoaded=false → F=0 (摩擦なし＝便益100%実現)
+   * 新: 業界平均 0.4 を保守的デフォルトに採用
+   * 監査根拠: Forg診断を経ない組織に対して便益100%を保証することは不当 */
+  forgFallbackFriction: 0.4,
   /* === v1.3.2 で廃止したもの (後方互換のため STATE には残さない) ===
    *   - archetypeFriction: archetype コード別の F 値テーブル (Forg 式で不要)
    *   - frictionWeights: 加重平均の w_S/w_L/w_C/w_Lp (加重平均自体が誤り)
@@ -1150,6 +1155,11 @@ const STATE = {
   maazEffectiveCoverage: null,
   maazBottleneck: null,
   maazScopeState: null,
+  /* v1.5.0 (QA Audit C3 fix): MAAZ未連携時のスコープ網羅率フォールバック値
+   * 旧: SCF=1.0 (理想値) → サイレントに 100% スコープ実装を仮定し ROI 過大化
+   * 新: 0.5 (業界平均的な部分実装) を保守的デフォルトとして採用
+   * 監査要件: 連携なきROIに対し「無条件理想ケース」を表明しない */
+  maazFallbackSCF: 0.5,
   pillarScores: null,
   ztCur: null, ztTgt: null, maazOverall: null,
   /* v1.1.3: ②の拡張 — pillar別感度/アクション連携 */
@@ -1238,16 +1248,46 @@ function calc(){
   const revLoss = dailyRev * S.downDays * S.impactRate;
   const prodLoss = S.users * S.staffHourly * 8 * S.downDays * S.impactRate;
   const damageB = revLoss + prodLoss;
-  const damageC = S.forensicCost + S.recoveryCost + S.replaceCost + S.callCenterCost;
-  const damageD = S.compensationCost + S.notifyCost + S.legalCost + S.churnLoss;
+  /* === v1.5.0 (QA Audit C1 fix): 被害額・無形資産価値の現金キャップ ===
+     旧: damageC/damageD/ipValue は組織規模デフォルト (¥500B 売上前提) 固定
+         小規模組織 (売上¥5B) で適用すると damageD > 売上 となり物理不可能解
+     新: 売上を超えない現金キャップを掛ける
+       - damageC ≤ 売上 × 1.0 (年間売上を超える単発インシデントコストは非現実)
+       - damageD ≤ 売上 × 1.0 (年間補償・賠償が年間売上超は持続不能)
+       - ipValue ≤ 売上 × 5 (無形資産は年商の数倍以内が一般的レンジ)
+     監査根拠: 物理的可能性を超える被害想定は ROI 過大計上の主因 */
+  const _damageCap = (S.revenue && S.revenue > 0) ? S.revenue : Infinity;
+  const _ipCap     = (S.revenue && S.revenue > 0) ? S.revenue * 5 : Infinity;
+  const damageC_raw = S.forensicCost + S.recoveryCost + S.replaceCost + S.callCenterCost;
+  const damageD_raw = S.compensationCost + S.notifyCost + S.legalCost + S.churnLoss;
+  const damageC = Math.min(damageC_raw, _damageCap);
+  const damageD = Math.min(damageD_raw, _damageCap);
+  const ipValue_eff = Math.min(S.ipValue, _ipCap);
+  const damageScaleCapped = (damageC_raw > damageC) || (damageD_raw > damageD) || (S.ipValue > ipValue_eff);
 
   const cyberProb_asis = S.baseRisk + S.cyberRiskMax * S.vulnCoeff;
-  const cyberProb_tobe = S.baseRisk + S.cyberRiskMax * S.toBe_vulnCoeff;
   const dlpProb_asis = S.baseRisk + S.dlpRiskMax * S.dlpVulnCoeff;
-  const dlpProb_tobe = S.baseRisk + S.dlpRiskMax * S.toBe_dlpVulnCoeff;
   /* 理想値（スコープ100%時）: SCF補正前 vulnCoeff を使用 */
   const cyberProb_tobe_ideal = S.baseRisk + S.cyberRiskMax * S.toBe_vulnCoeff_ideal;
   const dlpProb_tobe_ideal   = S.baseRisk + S.dlpRiskMax * S.toBe_dlpVulnCoeff_ideal;
+  /* === v1.5.0 (QA Audit C5 fix): 侵害確率の SCF 連動 ===
+     旧: cyberProb_tobe = baseRisk + cyberRiskMax × toBe_vulnCoeff
+         → SCF は impactRate / recoveryCostRate にのみ作用し、確率は理想値固定
+     問題: 部分導入では脆弱性も部分残存するべきなのに侵害確率は常に理想 (3.9%) になる
+     新: AS-IS と理想 TO-BE を networksSCF / dataSCF で線形補間
+         SCF=1.0 → 理想 toBe_vulnCoeff、SCF=0.0 → AS-IS まで戻る
+     ※ MAAZ 連携時は STATE.toBe_vulnCoeff が既にスコープ補正済の effectiveCoverage 値だが、
+       MAAZ 未連携 (maazFallbackSCF=0.5) や手動入力時にも一貫した連動を保証する */
+  const eff_toBe_vulnCoeff_cyber =
+      (S.maazEffectiveCoverage && typeof S.maazEffectiveCoverage.toBeVulnCoeffEffective === 'number')
+        ? S.toBe_vulnCoeff   /* MAAZ 連携時: 既に SCF 補正済値を使用 (旧挙動を維持) */
+        : (S.toBe_vulnCoeff_ideal + (S.vulnCoeff - S.toBe_vulnCoeff_ideal) * (1 - networksSCF));
+  const eff_toBe_dlpVulnCoeff =
+      (S.maazEffectiveCoverage && typeof S.maazEffectiveCoverage.toBeVulnCoeffEffective === 'number')
+        ? S.toBe_dlpVulnCoeff
+        : (S.toBe_dlpVulnCoeff_ideal + (S.dlpVulnCoeff - S.toBe_dlpVulnCoeff_ideal) * (1 - dataSCF));
+  const cyberProb_tobe = S.baseRisk + S.cyberRiskMax * eff_toBe_vulnCoeff_cyber;
+  const dlpProb_tobe = S.baseRisk + S.dlpRiskMax * eff_toBe_dlpVulnCoeff;
 
   const hardSec = secTotal * (S.secReduction / 100);
   const hardHW = S.hwCost * (S.hwReduction / 100);
@@ -1272,16 +1312,19 @@ function calc(){
      SCF=1.0 なら理想値まで縮小、SCF=0.33（部分導入）ならほぼAS-IS近辺。
      たかさんのMGA思想 IF(flatNet=1, 全社, 5%) の連続値拡張。
      Networks柱のSCF がマイクロセグメンテーションの実効度を決める。 */
+  /* v1.5.0 (QA Audit C3 fix): MAAZ未連携時の SCF フォールバックを 1.0 → maazFallbackSCF (default 0.5) に変更
+     監査根拠: 「連携なき ROI に理想スコープ仮定を埋め込まない」保守主義原則 */
+  const _scfFallback = (S.maazFallbackSCF != null) ? S.maazFallbackSCF : 0.5;
   const networksSCF = (S.maazEffectiveCoverage && S.maazEffectiveCoverage.byPillar &&
                        S.maazEffectiveCoverage.byPillar["Networks"])
-                      ? S.maazEffectiveCoverage.byPillar["Networks"].scf : 1.0;
+                      ? S.maazEffectiveCoverage.byPillar["Networks"].scf : _scfFallback;
   /* v1.1.4 fix (FIX-2): DLP 被害率は Data 柱の SCF で補正すべき
      旧: eff_toBe_dlpDamageRate = f(networksSCF)
      問題: DLP は Data 柱の事象 (データ分類・DLPポリシー・暗号化)
      新: Data 柱の SCF を使用。Chubu 例では Data SCF=0.5 のため DLP リスクがより正直に出る */
   const dataSCF = (S.maazEffectiveCoverage && S.maazEffectiveCoverage.byPillar &&
                    S.maazEffectiveCoverage.byPillar["Data"])
-                  ? S.maazEffectiveCoverage.byPillar["Data"].scf : 1.0;
+                  ? S.maazEffectiveCoverage.byPillar["Data"].scf : _scfFallback;
 
   // impactRate: AS-IS 20% → TO-BE 2% への縮小を SCF で減衰
   const eff_toBe_impactRate = S.impactRate - (S.impactRate - S.toBe_impactRate) * networksSCF;
@@ -1315,8 +1358,8 @@ function calc(){
   const riskCyber_asis = (damageB + damageC) * cyberProb_asis;
   const riskCyber_tobe = (toBe_damageB + damageC * eff_toBe_recoveryCostRate) * cyberProb_tobe;
   const riskCyberSaved = riskCyber_asis - riskCyber_tobe;
-  const riskDLP_asis = (damageD + S.ipValue) * dlpProb_asis;
-  const riskDLP_tobe = (damageD + S.ipValue) * eff_toBe_dlpDamageRate * dlpProb_tobe;
+  const riskDLP_asis = (damageD + ipValue_eff) * dlpProb_asis;
+  const riskDLP_tobe = (damageD + ipValue_eff) * eff_toBe_dlpDamageRate * dlpProb_tobe;
   const riskDLPSaved = riskDLP_asis - riskDLP_tobe;
   const riskTotal = riskCyberSaved + riskDLPSaved;
 
@@ -1337,7 +1380,7 @@ function calc(){
   const ideal_toBe_damageB        = ideal_toBe_revLoss + ideal_toBe_prodLoss;
   const ideal_riskCyber_tobe      = (ideal_toBe_damageB + damageC * ideal_toBe_recoveryRate) * cyberProb_tobe_ideal;
   const ideal_riskCyberSaved      = riskCyber_asis - ideal_riskCyber_tobe;
-  const ideal_riskDLP_tobe        = (damageD + S.ipValue) * ideal_toBe_dlpDamageRate * dlpProb_tobe_ideal;
+  const ideal_riskDLP_tobe        = (damageD + ipValue_eff) * ideal_toBe_dlpDamageRate * dlpProb_tobe_ideal;
   const ideal_riskDLPSaved        = riskDLP_asis - ideal_riskDLP_tobe;
   const ideal_riskTotal           = ideal_riskCyberSaved + ideal_riskDLPSaved;
   const ideal_theoreticalBenefit  = hardTotal + opexTotal + prodTotal + ideal_riskTotal;
@@ -1370,7 +1413,12 @@ function calc(){
    *   Forg=0 (最良) → F=0, Forg=1 (中立) → F=0.5, Forg→∞ (最悪) → F→1
    */
   const computeFriction = () => {
-    if (!S.forgLoaded) return { F: 0, Forg_raw: 0, source: 'none' };
+    if (!S.forgLoaded) {
+      /* v1.5.0 (QA Audit C4 fix): Forg未連携時に F=0 で便益 100% 実現を仮定するのは
+       * 監査上不当。業界平均 0.4 を保守的デフォルトとして採用し、UI でもその旨を表示する */
+      const fallbackF = (S.forgFallbackFriction != null) ? S.forgFallbackFriction : 0.4;
+      return { F: fallbackF, Forg_raw: null, source: 'industry-default' };
+    }
     const epsilon = S.forgFrictionEpsilon ?? 0.01;
     const numerator   = S.forgS * S.forgL;
     const denominator = Math.max(epsilon, S.forgC * S.forgLp);
@@ -1465,22 +1513,42 @@ function calc(){
   // 2年累積 ROI
   const roi2y_pct = invest_2y > 0 ? (benefit_2y - invest_2y) / invest_2y * 100 : 0;
 
-  // 正確な Payback 期間 (単位: 月、2年=24ヶ月でキャップ)
-  // 1年目終わりで累積CFが正なら 1年目内、そうでなければ 2年目内で達成 or 未達
+  /* === v1.5.0 (QA Audit C2 fix): Payback 月数の定義統一 ===
+     旧 payback2yMonths は effectiveBenefit (= Hard+OpEx+Prod+Risk) を分母に使っていたが、
+     Risk 削減額は確率×被害の期待値であり実現キャッシュではない。
+     回収月数の保守主義原則 (現金フローのみ) と legacy paybackMonths との整合性のため、
+     payback2yMonths も costReductionBenefit (Hard+OpEx+Prod、リスク除外) を基準に再定義。
+     旧定義の参照値は payback2yMonths_riskInclusive に保持。 */
+  const cashBenefit_y1 = costReductionBenefit * (S.rampYear1 ?? 0.5);
+  const cashBenefit_y2 = costReductionBenefit * (S.rampYear2 ?? 1.0);
+  const cashCF_y1 = cashBenefit_y1 - invest_y1;
+  const cashCF_y2 = cashBenefit_y2 - invest_y2;
+  const cashCumulCF_y1 = cashCF_y1;
+  const cashCumulCF_y2 = cashCF_y1 + cashCF_y2;
+
+  // 正確な Payback 期間 (単位: 月、2年=24ヶ月でキャップ) — Cash-only 基準 (v1.5.0)
   let payback2yMonths;
-  if (netCF_y1 >= 0 && cumulativeCF_y1 >= 0) {
-    // 1年目で回収: 月次平均便益で按分
-    const monthlyNetCF_y1 = benefit_y1 / 12 - invest_y1 / 12; /* 投資も月割りで概算 */
-    // 投資が月初一括の想定で: month ≈ invest_y1 / (benefit_y1/12)
-    payback2yMonths = (benefit_y1 / 12) > 0 ? Math.min(24, invest_y1 / (benefit_y1 / 12)) : Infinity;
-  } else if (cumulativeCF_y2 >= 0) {
-    // 2年目で回収: -cumulativeCF_y1 / (benefit_y2/12 - invest_y2/12)
-    const remaining = -cumulativeCF_y1;
-    const monthlyNetCF_y2 = (benefit_y2 - invest_y2) / 12;
-    payback2yMonths = 12 + (monthlyNetCF_y2 > 0 ? remaining / monthlyNetCF_y2 : 12);
+  if (cashCF_y1 >= 0 && cashCumulCF_y1 >= 0) {
+    payback2yMonths = (cashBenefit_y1 / 12) > 0 ? Math.min(24, invest_y1 / (cashBenefit_y1 / 12)) : Infinity;
+  } else if (cashCumulCF_y2 >= 0) {
+    const remaining = -cashCumulCF_y1;
+    const monthlyCashCF_y2 = (cashBenefit_y2 - invest_y2) / 12;
+    payback2yMonths = 12 + (monthlyCashCF_y2 > 0 ? remaining / monthlyCashCF_y2 : 12);
     payback2yMonths = Math.min(24, payback2yMonths);
   } else {
-    payback2yMonths = Infinity; // 2年以内に回収不可
+    payback2yMonths = Infinity;
+  }
+  // 参考値: 旧定義 (Risk 含む期待値ベース)。監査トレース用。
+  let payback2yMonths_riskInclusive;
+  if (netCF_y1 >= 0 && cumulativeCF_y1 >= 0) {
+    payback2yMonths_riskInclusive = (benefit_y1 / 12) > 0 ? Math.min(24, invest_y1 / (benefit_y1 / 12)) : Infinity;
+  } else if (cumulativeCF_y2 >= 0) {
+    const remaining = -cumulativeCF_y1;
+    const monthlyNetCF_y2 = (benefit_y2 - invest_y2) / 12;
+    payback2yMonths_riskInclusive = 12 + (monthlyNetCF_y2 > 0 ? remaining / monthlyNetCF_y2 : 12);
+    payback2yMonths_riskInclusive = Math.min(24, payback2yMonths_riskInclusive);
+  } else {
+    payback2yMonths_riskInclusive = Infinity;
   }
 
   // ISSUE-5: 期待値モデル限界表示用データ
@@ -1493,6 +1561,8 @@ function calc(){
   return {
     secTotal, nwTotal, infraTotal,
     dailyRev, revLoss, prodLoss, damageB, damageC, damageD,
+    /* v1.5.0 (QA Audit C1 fix): 売上ベースキャップ適用結果の透明化 */
+    damageC_raw, damageD_raw, ipValue_eff, damageScaleCapped,
     cyberProb_asis, cyberProb_tobe, dlpProb_asis, dlpProb_tobe,
     cyberProb_tobe_ideal, dlpProb_tobe_ideal,
     hardTotal, hardSec, hardHW, hardMPLS, hardRack,
@@ -1521,6 +1591,9 @@ function calc(){
     netCF_y1, netCF_y2, cumulativeCF_y1, cumulativeCF_y2,
     /* v1.3.1: NPV削除、2年累計CF を主指標として扱う */
     roi2y_pct, payback2yMonths,
+    /* v1.5.0 (QA Audit C2 fix): cash-only payback と risk-inclusive 参考値の両方を返す */
+    payback2yMonths_riskInclusive,
+    cashBenefit_y1, cashBenefit_y2, cashCumulCF_y2,
     probAsIs2y, probToBe2y, riskBenefit_2y_expected,
   };
 }
@@ -1713,8 +1786,8 @@ function renderIntro(){
             <div class="field">
               <label class="field-lb">Integration <span class="jp">連携状況</span></label>
               <div style="font-size:12px;color:var(--ink-2);padding:8px 0">
-                MAAZ: <strong id="maazStatus" style="color:${STATE.maazLoaded?'var(--trust)':'var(--ink-3)'}">${STATE.maazLoaded?'✓ 連携済':'— 未連携'}</strong><br/>
-                Forg: <strong id="forgStatus" style="color:${STATE.forgLoaded?'var(--trust)':'var(--ink-3)'}">${STATE.forgLoaded?'✓ '+STATE.forgArchetype:'— 未連携'}</strong>
+                MAAZ: <strong id="maazStatus" style="color:${STATE.maazLoaded?'var(--trust)':'var(--warn)'}">${STATE.maazLoaded?'✓ 連携済':'⚠ 未連携 (SCF='+((STATE.maazFallbackSCF??0.5)*100).toFixed(0)+'% 保守仮定)'}</strong><br/>
+                Forg: <strong id="forgStatus" style="color:${STATE.forgLoaded?'var(--trust)':'var(--warn)'}">${STATE.forgLoaded?'✓ '+STATE.forgArchetype:'⚠ 未連携 (摩擦F='+((STATE.forgFallbackFriction??0.4)*100).toFixed(0)+'% 業界平均)'}</strong>
               </div>
             </div>
           </div>
@@ -1925,6 +1998,9 @@ function renderDamage(){
           <div><div class="stat-label">Damage C</div><div class="stat-value"><span class="metric-lg num" data-counter="${R.damageC/1e8}" data-decimals="1">0</span><span class="stat-unit">億円</span></div><div class="stat-caption">復旧対応</div></div>
           <div><div class="stat-label">Damage D</div><div class="stat-value"><span class="metric-lg num" data-counter="${R.damageD/1e8}" data-decimals="1">0</span><span class="stat-unit">億円</span></div><div class="stat-caption">法的・対外</div></div>
         </div>
+        ${R.damageScaleCapped ? `<div style="margin-top:10px;padding:8px 12px;background:rgba(255,179,71,.12);border-left:3px solid var(--warn);font-size:11px;color:var(--ink-2)">
+          <strong style="color:var(--warn)">⚠ 被害額キャップ適用 (v1.5.0 QA監査対応)</strong> — 入力された被害想定が年間売上 ${fmt(STATE.revenue)} を超過したため、物理的整合性の観点から売上額を上限として制限しました。組織規模に応じて secItems / churnLoss / ipValue の手入力をお勧めします。
+        </div>` : ''}
       </div>
     </section>
 
@@ -1968,7 +2044,7 @@ function renderDamage(){
       <div class="container">
         <div class="chapter-marker"><span class="chapter-num">Chapter 02.4</span><span class="chapter-line"></span><span class="chapter-label">Probability & Expected Loss <span class="jp">· 確率と期待損害</span></span></div>
         <p class="lede-jp reveal" style="margin-bottom:16px">
-          TO-BE の被害額は <strong>Networks柱のSCF</strong>（現在 ${(R.networksSCF*100).toFixed(0)}%）で Blast Radius 縮小効果を減衰させて算出。${STATE.maazEffectiveCoverage ? `Networks柱のスコープ網羅率 ${(R.networksSCF*100).toFixed(0)}% のため、マイクロセグメンテーション効果は部分的に反映されます。` : `MAAZ v4.3 未連携のため SCF=100% で理想的な縮小効果を仮定しています。`}
+          TO-BE の被害額は <strong>Networks柱のSCF</strong>（現在 ${(R.networksSCF*100).toFixed(0)}%）で Blast Radius 縮小効果を減衰させて算出。${STATE.maazEffectiveCoverage ? `Networks柱のスコープ網羅率 ${(R.networksSCF*100).toFixed(0)}% のため、マイクロセグメンテーション効果は部分的に反映されます。` : `<strong style="color:var(--warn)">⚠ MAAZ未連携</strong> — 業界平均 SCF=${(R.networksSCF*100).toFixed(0)}% を保守的フォールバックとして適用しています (v1.5.0 QA監査対応)。実際のスコープ網羅率を反映するには MAAZ JSON を読み込んでください。`}
         </p>
         ${buildMitreBasisBanner(R)}
         <div class="card elevated reveal" style="overflow:hidden">
@@ -2438,6 +2514,16 @@ function renderDashboard(){
         <div class="card elevated reveal" style="padding:20px 12px;overflow:auto">
           ${buildROIWaterfallSVG(R)}
         </div>
+        <!-- v1.5.0 (QA Audit C4 fix): Forg未連携時の業界平均フォールバック明示 -->
+        ${R.useUnifiedFriction && !STATE.forgLoaded ? `
+        <div class="card elevated reveal d1" style="padding:18px 24px;margin-top:20px;border-left:3px solid var(--warn);background:rgba(255,179,71,.06)">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--warn);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px">⚠ Forg未連携 — 業界平均フォールバック適用</div>
+          <div style="font-size:13px;color:var(--ink-2);line-height:1.6">
+            組織摩擦係数 <strong style="color:var(--warn)">F=${((R.frictionF||0)*100).toFixed(0)}%</strong> (業界平均) を全便益に一律適用しています。
+            便益実現率は <strong>${((1-(R.frictionF||0))*100).toFixed(0)}%</strong> として算出。
+            <br/><span style="font-size:11px;color:var(--ink-3)">実際の組織能力を反映するには Forg 診断 (S/L/C/L') を実施し JSON を読み込んでください。Forg 連携後は摩擦係数が組織固有値に置き換わります。</span>
+          </div>
+        </div>` : ''}
         <!-- v1.3.2: 組織摩擦係数 F の可視化 (Forg 本来の式に準拠) -->
         ${R.useUnifiedFriction && STATE.forgLoaded ? `
         <div class="card elevated reveal d1" style="padding:24px;margin-top:20px;border-left:3px solid var(--primary)">
@@ -2862,9 +2948,9 @@ function renderResults(){
             <div class="kpi-sub">便益合計 − 投資合計</div>
           </div>
           <div class="card elevated kpi-card" style="--kpi-color:${isFinite(R.payback2yMonths)&&R.payback2yMonths<=24?'var(--trust)':'var(--danger)'}">
-            <div class="kpi-label">Payback期間</div>
+            <div class="kpi-label">Payback期間 <span style="font-size:9px;color:var(--ink-3);text-transform:none;letter-spacing:0;font-weight:400">(現金便益のみ)</span></div>
             <div class="kpi-value num">${isFinite(R.payback2yMonths)?R.payback2yMonths.toFixed(1):'未達'}<span class="unit">${isFinite(R.payback2yMonths)?'ヶ月':''}</span></div>
-            <div class="kpi-sub">${isFinite(R.payback2yMonths)&&R.payback2yMonths<=24?'2年以内回収 ✓':'2年以内回収不可'}</div>
+            <div class="kpi-sub">${isFinite(R.payback2yMonths)&&R.payback2yMonths<=24?'2年以内回収 ✓':'2年以内回収不可'} ${R.payback2yMonths_riskInclusive!=null && isFinite(R.payback2yMonths_riskInclusive) ? `<br/><span style="font-size:10px;color:var(--ink-3)">参考(Risk含): ${R.payback2yMonths_riskInclusive.toFixed(1)}ヶ月</span>`:''}</div>
           </div>
           <div class="card elevated kpi-card" style="--kpi-color:var(--primary)">
             <div class="kpi-label">2年累計 投資額</div>
