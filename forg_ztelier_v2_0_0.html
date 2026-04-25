@@ -1,0 +1,2380 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>F_org — Organizational Friction Atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ============================================================
+   Forg — Ztelier Edition v1.0
+   Base: Ztelier Common Kit v1.1.0 (2026)
+   Themes: paper (default) | indigo (dark)
+   ============================================================ */
+:root,
+[data-theme="paper"]{
+  --bg:    #F7F9FB;
+  --bg-1:  #FFFFFF;
+  --bg-2:  #F1F4F8;
+  --bg-3:  #E7ECF2;
+
+  --ink-0: #001744;
+  --ink:   #0B1E3F;
+  --ink-2: #3A4B6B;
+  --ink-3: #6B7A95;
+  --ink-4: #A3ADBF;
+
+  --line:   #E1E6EE;
+  --line-2: #C9D1DE;
+  --line-3: #A8B3C5;
+
+  --primary:     #246CF7;
+  --primary-2:   #1853CC;
+  --primary-dim: #246CF718;
+  --primary-tint:#E8EFFD;
+
+  --trust:     #7BA05B;
+  --trust-2:   #5F7D45;
+  --trust-dim: #7BA05B18;
+
+  --danger:     #C04A4A;
+  --danger-dim: #C04A4A18;
+  --warn:       #C88A2A;
+  --warn-dim:   #C88A2A18;
+  --info:       #246CF7;
+
+  /* Forg variable palette — harmonized for paper */
+  --v-s:   #C04A4A;   /* Silo      — red (friction / numerator) */
+  --v-l:   #B5832C;   /* Legacy    — amber (friction / numerator) */
+  --v-c:   #A0517E;   /* Crisis    — rose (drive / denominator) */
+  --v-lp:  #3D8888;   /* Leadership — teal (drive / denominator) */
+
+  --topbar-bg: rgba(247, 249, 251, 0.86);
+  --shadow-soft: 0 1px 2px rgba(0,23,68,.04), 0 8px 28px rgba(0,23,68,.06);
+  --shadow-lift: 0 2px 6px rgba(0,23,68,.06), 0 24px 60px rgba(0,23,68,.10);
+}
+
+[data-theme="indigo"]{
+  --bg:    #050C1C;
+  --bg-1:  #0C1730;
+  --bg-2:  #122044;
+  --bg-3:  #1B2D5C;
+
+  --ink-0: #FFFFFF;
+  --ink:   #EEF3FE;
+  --ink-2: #B5C4E3;
+  --ink-3: #7E93BE;
+  --ink-4: #4F628B;
+
+  --line:   #1D2E54;
+  --line-2: #2A3F6E;
+  --line-3: #415B95;
+
+  --primary:     #5B8EFF;
+  --primary-2:   #3D74F0;
+  --primary-dim: #5B8EFF22;
+  --primary-tint:#10204A;
+
+  --trust:     #9BC47A;
+  --trust-2:   #7BA05B;
+  --trust-dim: #9BC47A22;
+
+  --danger:     #D86A6A;
+  --danger-dim: #D86A6A22;
+  --warn:       #E0A545;
+  --warn-dim:   #E0A54522;
+  --info:       #5B8EFF;
+
+  --v-s:   #E37878;
+  --v-l:   #E4B05A;
+  --v-c:   #C876A8;
+  --v-lp:  #65B0B0;
+
+  --topbar-bg: rgba(5, 12, 28, 0.86);
+  --shadow-soft: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.4);
+  --shadow-lift: 0 2px 6px rgba(0,0,0,.35), 0 24px 60px rgba(0,0,0,.55);
+}
+
+:root{
+  --font-sans:    "Outfit", "Noto Sans JP", -apple-system, system-ui, sans-serif;
+  --font-jp:      "Noto Sans JP", "Outfit", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Outfit", "Noto Sans JP", -apple-system, sans-serif;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{
+  margin:0; padding:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-sans);
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:0;
+  text-rendering:optimizeLegibility;
+  transition: background .3s, color .3s;
+}
+body{ min-height:100vh; }
+
+.mono{ font-family:var(--font-mono); font-feature-settings:"ss01","cv11"; letter-spacing:.02em; }
+.upper{ text-transform:uppercase; letter-spacing:.14em; }
+.jp{ font-family:var(--font-jp); }
+.num{ font-variant-numeric: tabular-nums; letter-spacing:-0.01em; }
+
+/* ==== App shell ==== */
+.app{ position:relative; display:flex; flex-direction:column; min-height:100vh; width:100%; background:var(--bg); }
+
+/* ==== Top Bar ==== */
+.topbar{
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center;
+  padding:0 24px; gap:16px; height:64px;
+  background: var(--topbar-bg);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  position:sticky; top:0; z-index:50;
+  flex-shrink:0;
+}
+.brand{ display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.brand-mark{ width:32px; height:32px; flex-shrink:0; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.1; min-width:0; }
+.brand-title{
+  font-family:var(--font-display); font-size:18px; color:var(--ink);
+  font-weight:500; letter-spacing:-0.01em; white-space:nowrap;
+}
+.brand-title em{
+  font-style:normal; color:var(--primary); font-weight:600;
+}
+.brand-title sub{
+  font-size:10px; font-weight:400; color:var(--ink-3); letter-spacing:0;
+  vertical-align:baseline;
+}
+.brand-sub{
+  font-size:10px; color:var(--ink-3);
+  letter-spacing:.16em; text-transform:uppercase; font-weight:500;
+  white-space:nowrap;
+}
+
+.nav-chapters{
+  display:flex; gap:4px; flex-shrink:0; overflow-x:auto;
+  scrollbar-width:none;
+}
+.nav-chapters::-webkit-scrollbar{ display:none; }
+.nav-chapter{
+  border:1px solid transparent; background: transparent;
+  color: var(--ink-3);
+  height:34px; padding:0 12px; cursor:pointer;
+  font-family:var(--font-sans); font-size:13px; font-weight:500;
+  border-radius:999px; white-space:nowrap;
+  display:inline-flex; align-items:center; gap:8px;
+  transition:all .15s;
+}
+.nav-chapter:hover{ color:var(--ink-2); background:var(--bg-2); }
+.nav-chapter.on{
+  background: var(--bg-1); border-color: var(--line-2); color: var(--ink);
+}
+.nav-chapter .n{
+  font-family:var(--font-mono);
+  font-size:11px; color: var(--ink-4); font-weight:500;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+}
+.nav-chapter.on .n{ color: var(--primary); }
+.nav-chapter .done{
+  display:inline-flex; width:6px; height:6px; border-radius:50%;
+  background: var(--trust); margin-left:2px;
+}
+
+.top-meta{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
+
+.fbadge{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:5px 12px 5px 14px;
+  border:1px solid var(--line-2);
+  background:var(--bg-1);
+  border-radius:999px;
+  white-space:nowrap;
+}
+.fbadge .lbl{
+  font-family:var(--font-mono); font-size:9.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
+  font-weight:500;
+}
+.fbadge .val{
+  font-family:var(--font-display); font-size:18px;
+  font-weight:500; letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums; line-height:1;
+}
+
+.theme-toggle{
+  width:34px; height:34px; border-radius:50%;
+  border:1px solid var(--line-2); background:var(--bg-1);
+  cursor:pointer; color:var(--ink-2);
+  display:flex; align-items:center; justify-content:center;
+  transition: all .2s;
+  flex-shrink:0;
+}
+.theme-toggle:hover{ background:var(--bg-2); color:var(--ink); }
+.theme-toggle svg{ width:16px; height:16px; }
+
+.tag{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:11px; letter-spacing:.02em;
+  color:var(--ink-2); font-weight:500;
+  border:1px solid var(--line-2); padding:4px 10px; border-radius:999px;
+  background: var(--bg-1); white-space:nowrap;
+}
+.tag .dot{ width:6px; height:6px; border-radius:50%; background:var(--ink-3); }
+.tag.live .dot{ background:var(--trust); box-shadow: 0 0 0 3px var(--trust-dim); }
+
+.spacer{ flex:1; min-width:0; }
+
+/* ==== Buttons ==== */
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  height:36px; padding:0 16px; border-radius:999px;
+  border:1px solid var(--line-2);
+  background: var(--bg-1); color:var(--ink); cursor:pointer;
+  font-family:var(--font-sans); font-size:13px; font-weight:500;
+  letter-spacing:-0.005em;
+  transition: all .2s cubic-bezier(.2,.6,.2,1);
+}
+.btn:hover{
+  background:var(--bg-2); border-color: var(--line-3);
+  transform: translateY(-1px);
+}
+.btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+.btn.primary{
+  background: var(--ink-0); color: var(--bg); border-color: var(--ink-0);
+}
+.btn.primary:hover{ background: var(--ink); }
+.btn.accent{
+  background: var(--primary); color:#fff; border-color:var(--primary);
+}
+.btn.accent:hover{ background: var(--primary-2); border-color:var(--primary-2); }
+.btn.ghost{
+  background: transparent; border-color: var(--line);
+  color: var(--ink-3);
+}
+.btn.ghost:hover{ color:var(--ink); border-color: var(--line-2); }
+.btn.trust{
+  border-color: var(--trust); color: var(--trust);
+}
+.btn.trust:hover{
+  background: var(--trust-dim); border-color: var(--trust-2); color: var(--trust-2);
+}
+
+/* ==== Sections & Hero ==== */
+.section{ padding: 96px 48px; }
+.section.hero{ padding: 120px 48px 80px; }
+.section.tight{ padding: 48px; }
+.container{ max-width: 1280px; margin: 0 auto; }
+.section-divider{
+  height:1px; background: var(--line);
+  max-width: 1280px; margin: 0 auto;
+}
+
+.chapter-marker{
+  display:flex; align-items:baseline; gap:16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+.chapter-num{
+  font-family: var(--font-mono);
+  font-size: 13px; color: var(--primary); font-weight:500;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.chapter-line{ width:40px; height:1px; background:var(--line-2); }
+.chapter-label{
+  font-family: var(--font-sans); font-size:11px;
+  letter-spacing:.20em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:500;
+}
+
+/* ==== Typography ==== */
+.h-display{
+  font-family:var(--font-display); font-weight:500;
+  letter-spacing:-0.025em; color:var(--ink);
+}
+.h-display em{
+  font-style:normal; color:var(--primary); font-weight:600;
+}
+.h-display sub{
+  font-size:0.55em; font-weight:400; color:var(--ink-3);
+  letter-spacing:0; vertical-align:baseline;
+}
+.kicker{
+  font-size:13px; color:var(--primary); font-weight:500;
+  letter-spacing:.08em; margin-bottom:24px;
+  font-family:var(--font-sans); font-style:normal;
+  text-transform:uppercase;
+}
+.lede-jp{
+  font-family:var(--font-jp); font-weight:300;
+  font-size:clamp(16px, 1.7vw, 20px);
+  line-height:1.7; color:var(--ink-2);
+  max-width:48ch; margin:0 0 48px;
+  letter-spacing:.01em;
+}
+.lede-jp sub{ font-size:.7em; vertical-align:baseline; color:var(--ink-3); }
+.lede-jp b{ color:var(--ink); font-weight:500; }
+
+.metric-lg{
+  font-family:var(--font-display); font-weight:300;
+  font-size:clamp(44px, 5.2vw, 64px); line-height:1;
+  letter-spacing:-0.03em; color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+.metric-xxl{
+  font-family:var(--font-display); font-weight:200;
+  font-size:clamp(72px, 10vw, 132px); line-height:1;
+  letter-spacing:-0.04em;
+  font-variant-numeric:tabular-nums;
+}
+
+.mark-line{
+  background: linear-gradient(transparent 72%, var(--primary-dim) 72%, var(--primary-dim) 92%, transparent 92%);
+  padding: 0 2px;
+}
+
+/* ==== Hero Stats ==== */
+.stats-row{
+  display:grid; gap:40px;
+  padding-top:32px; border-top:1px solid var(--line);
+  max-width: 880px;
+}
+.stat-label{
+  font-size:11px; color:var(--ink-3);
+  letter-spacing:.12em; text-transform:uppercase;
+  margin-bottom:10px; font-weight:500;
+}
+.stat-value{ display:flex; align-items:baseline; gap:6px; }
+.stat-unit{ font-size:16px; color:var(--ink-3); }
+.stat-caption{ font-size:12px; color:var(--ink-3); margin-top:8px; }
+
+/* ==== Card ==== */
+.card{
+  background: var(--bg-1);
+  border:1px solid var(--line);
+  border-radius:14px;
+  transition: border-color .2s, box-shadow .2s, background .3s;
+}
+.card.elevated{ box-shadow: var(--shadow-soft); }
+
+/* ==== Variable grid (Intro) ==== */
+.var-grid{
+  display:grid; grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:14px; margin-top:24px;
+}
+.var-card{
+  padding:20px 22px;
+  background: var(--bg-1);
+  border:1px solid var(--line);
+  border-radius:12px;
+  position:relative;
+  overflow:hidden;
+}
+.var-card::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background: var(--var-color);
+}
+.var-card .k{
+  font-family:var(--font-display); font-size:26px; font-weight:500;
+  color: var(--var-color); letter-spacing:-0.02em; line-height:1;
+  display:flex; align-items:baseline; gap:8px;
+}
+.var-card .k em{
+  font-style:normal; font-size:14px; color: var(--ink-3); font-weight:500;
+  letter-spacing:.02em;
+}
+.var-card .kja{
+  font-family:var(--font-jp); font-weight:500;
+  font-size:12.5px; color:var(--ink);
+  margin-top:10px; letter-spacing:-0.005em;
+}
+.var-card .kdesc{
+  font-family:var(--font-jp); font-weight:300;
+  font-size:11.5px; color: var(--ink-2); line-height:1.7;
+  margin-top:6px;
+}
+.var-card .role-tag{
+  font-family:var(--font-mono); font-size:9px;
+  letter-spacing:.14em; text-transform:uppercase;
+  color: var(--var-color); margin-top:12px;
+  display:inline-block; font-weight:500;
+}
+
+/* ==== F band card ==== */
+.fband-card{
+  padding:24px 28px;
+  background: var(--bg-1); border:1px solid var(--line);
+  border-radius:12px;
+}
+.fband-head{
+  display:flex; justify-content:space-between;
+  font-family:var(--font-mono); font-size:10px;
+  color:var(--ink-3); letter-spacing:.14em;
+  text-transform:uppercase; margin-bottom:14px; font-weight:500;
+}
+.fband-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 0;
+  border-top:1px solid var(--line);
+}
+.fband-row:first-of-type{ border-top:0; }
+.fband-row .b{
+  font-family:var(--font-mono); font-size:13px; font-weight:500;
+  letter-spacing:.02em;
+}
+.fband-row .s{
+  font-family:var(--font-jp); font-weight:500;
+  font-size:14px;
+}
+
+/* ==== Customer strip ==== */
+.cust-strip{
+  display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+}
+.cust-strip label{
+  font-size:13px; color:var(--ink-2); font-weight:500; white-space:nowrap;
+}
+
+/* ==== ninput (text/number inputs) ==== */
+.ninput{
+  background: var(--bg-1);
+  border:1.5px solid var(--line-2);
+  border-radius:10px;
+  color: var(--ink);
+  font-family:var(--font-mono); font-size:14px;
+  padding:9px 14px;
+  width:140px; text-align:right; outline:none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ninput:focus{
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-dim);
+}
+
+/* ==== Question Card ==== */
+.qcard{
+  padding:22px 26px; margin-bottom:14px;
+  background: var(--bg-1);
+  border:1px solid var(--line);
+  border-radius:14px;
+  transition: border-color .15s, background .15s;
+}
+.qcard:hover{ border-color: var(--line-2); }
+.qcard.answered{
+  border-left:3px solid var(--trust);
+  background: color-mix(in oklab, var(--trust) 3%, var(--bg-1));
+}
+.qlabel{
+  font-family:var(--font-mono); font-size:10.5px;
+  letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); font-weight:500;
+  margin-bottom:10px;
+}
+.qtext{
+  font-family:var(--font-sans); font-size:16px; font-weight:500;
+  line-height:1.5; color:var(--ink);
+  margin-bottom:6px; letter-spacing:-0.005em;
+}
+.qhint{
+  font-family:var(--font-jp); font-weight:300;
+  font-size:12.5px; color:var(--ink-2);
+  line-height:1.7; margin:10px 0 16px;
+  padding-left:14px; border-left:2px solid var(--line-2);
+  letter-spacing:.01em;
+}
+
+/* ==== Score buttons ==== */
+.score-row{ display:flex; gap:8px; }
+.sbtn{
+  flex:1; height:48px;
+  border:1.5px solid var(--line-2);
+  background: transparent;
+  color: var(--ink-3);
+  font-family:var(--font-mono); font-size:16px; font-weight:500;
+  border-radius:10px; cursor:pointer;
+  transition: all .15s;
+  min-width:48px;
+}
+.sbtn:hover{
+  border-color: var(--ink-3); color:var(--ink); background: var(--bg-2);
+}
+.sbtn:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+.sbtn.sel-lo{ background: var(--trust-dim); border-color:var(--trust); color:var(--trust); font-weight:600; }
+.sbtn.sel-mi{ background: var(--warn-dim); border-color:var(--warn); color:var(--warn); font-weight:600; }
+.sbtn.sel-hi{ background: var(--danger-dim); border-color:var(--danger); color:var(--danger); font-weight:600; }
+.sbtn.sel-dr-lo{ background: var(--danger-dim); border-color:var(--danger); color:var(--danger); font-weight:600; }
+.sbtn.sel-dr-mi{ background: var(--warn-dim); border-color:var(--warn); color:var(--warn); font-weight:600; }
+.sbtn.sel-dr-hi{ background: var(--trust-dim); border-color:var(--trust); color:var(--trust); font-weight:600; }
+.slabels{
+  display:flex; justify-content:space-between;
+  margin-top:10px; font-size:11.5px; color:var(--ink-3);
+  font-weight:500;
+}
+
+/* ==== Role pill ==== */
+.role-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  font-family:var(--font-mono); font-size:10px;
+  letter-spacing:.12em; text-transform:uppercase;
+  padding:5px 11px; border-radius:999px;
+  background: var(--bg-1); border:1px solid var(--line-2);
+  font-weight:500;
+}
+.role-pill.num{
+  color: var(--danger);
+  background: var(--danger-dim);
+  border-color: color-mix(in oklab, var(--danger) 30%, var(--line));
+}
+.role-pill.den{
+  color: var(--trust);
+  background: var(--trust-dim);
+  border-color: color-mix(in oklab, var(--trust) 30%, var(--line));
+}
+
+/* ==== Section summary row ==== */
+.sec-sum{
+  margin-bottom:20px; font-size:12.5px; color: var(--ink-3);
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+
+/* ==== F meter (result) ==== */
+.fmeter-track{
+  height:6px; background: var(--bg-3);
+  border-radius:3px; overflow:hidden; margin-top:4px;
+}
+.fmeter-fill{
+  height:100%; border-radius:3px;
+  transition: width .6s cubic-bezier(.2,.6,.2,1);
+}
+.fmeter-scale{
+  display:flex; justify-content:space-between;
+  font-family:var(--font-mono); font-size:9.5px;
+  color: var(--ink-4); margin-top:6px;
+  letter-spacing:.04em;
+}
+
+/* ==== Matrix (archetype 2x2) ==== */
+.matrix{
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:8px; margin:12px 0;
+}
+.mcell{
+  padding:20px 16px; border-radius:10px; text-align:center;
+  border:1.5px solid var(--line);
+  background: var(--bg-2);
+  opacity:.42;
+  transition: all .3s cubic-bezier(.2,.6,.2,1);
+}
+.mcell.active{
+  opacity:1;
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 8%, var(--bg-1));
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
+}
+.mcell-icon{
+  width:32px; height:32px; margin:0 auto 10px;
+  display:flex; align-items:center; justify-content:center;
+}
+.mcell-icon svg{ width:100%; height:100%; }
+.mcell-name{
+  font-size:13px; font-weight:600; line-height:1.4;
+  color: var(--ink); letter-spacing:-0.005em;
+}
+.mcell-name em{
+  font-style:normal; font-weight:500;
+  color: var(--ink-3); font-size:11px;
+  display:block; margin-top:3px; letter-spacing:.02em;
+}
+
+/* ==== Contradictions ==== */
+.contra{
+  padding:16px 20px; margin-bottom:12px;
+  background: color-mix(in oklab, var(--warn) 4%, var(--bg-1));
+  border:1px solid color-mix(in oklab, var(--warn) 30%, var(--line));
+  border-radius:12px;
+}
+.contra-title{
+  font-size:13px; font-weight:600; color: var(--warn);
+  margin-bottom:6px;
+  display:flex; align-items:center; gap:8px;
+  letter-spacing:-0.005em;
+}
+.contra-desc{
+  font-family:var(--font-jp); font-weight:300;
+  font-size:12.5px; color: var(--ink-2); line-height:1.75;
+}
+
+/* ==== Recommendations ==== */
+.rec{
+  display:flex; gap:14px; padding:16px 0;
+  border-bottom:1px solid var(--line);
+}
+.rec:last-child{ border-bottom:none; }
+.rec-pri{
+  font-family:var(--font-mono); font-size:10px;
+  padding:4px 10px; border-radius:6px;
+  height:fit-content; white-space:nowrap;
+  font-weight:500; flex-shrink:0; margin-top:2px;
+  letter-spacing:.10em;
+}
+.pri-1{
+  background: var(--danger-dim); color: var(--danger);
+  border:1px solid color-mix(in oklab, var(--danger) 30%, var(--line));
+}
+.pri-2{
+  background: var(--warn-dim); color: var(--warn);
+  border:1px solid color-mix(in oklab, var(--warn) 28%, var(--line));
+}
+.pri-3{
+  background: var(--trust-dim); color: var(--trust);
+  border:1px solid color-mix(in oklab, var(--trust) 28%, var(--line));
+}
+.rec-title{
+  font-size:14.5px; font-weight:600;
+  margin-bottom:4px; color: var(--ink);
+  letter-spacing:-0.005em;
+}
+.rec-desc{
+  font-family:var(--font-jp); font-weight:300;
+  font-size:12.5px; color: var(--ink-2); line-height:1.75;
+}
+
+/* ==== Executive summary ==== */
+.exec-wrap{
+  border:1px solid var(--line);
+  border-left:3px solid var(--exec-color);
+  background: var(--bg-1); border-radius:14px;
+  padding:24px 28px;
+  box-shadow: var(--shadow-soft);
+}
+.exec-grid{
+  display:grid; grid-template-columns:1fr 1.3fr;
+  gap:24px; align-items:flex-start;
+}
+.exec-lbl{
+  font-family:var(--font-mono); font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase;
+  color: var(--ink-3); font-weight:500; margin-bottom:8px;
+}
+.exec-pname{
+  font-family:var(--font-display); font-weight:500;
+  font-size:clamp(22px, 2.6vw, 32px); line-height:1.15;
+  color: var(--exec-color); margin-bottom:10px;
+  letter-spacing:-0.02em;
+}
+.exec-diag{
+  font-family:var(--font-jp); font-weight:300;
+  font-size:13.5px; color: var(--ink-2); line-height:1.75;
+}
+.exec-dev{
+  font-family:var(--font-mono); font-size:10.5px;
+  color: var(--ink-3); margin-top:12px;
+  letter-spacing:.04em;
+}
+.exec-action{
+  background: color-mix(in oklab, var(--exec-color) 6%, var(--bg-1));
+  border:1px solid color-mix(in oklab, var(--exec-color) 28%, var(--line));
+  padding:18px 22px; border-radius:12px;
+}
+.exec-act-txt{
+  font-size:17px; font-weight:600; color: var(--ink);
+  line-height:1.5; margin-bottom:10px;
+  letter-spacing:-0.01em;
+}
+.exec-act-ref{
+  font-family:var(--font-mono); font-size:10.5px;
+  color: var(--ink-3); letter-spacing:.04em;
+}
+.exec-foot{
+  margin-top:18px; padding-top:14px;
+  border-top:1px dashed var(--line-2);
+  font-family:var(--font-jp); font-weight:300;
+  font-size:12.5px; color: var(--ink-3);
+  text-align:center; letter-spacing:.01em;
+}
+
+/* ==== Pull quote ==== */
+.pull-quote{
+  font-family:var(--font-display); font-weight:400;
+  font-size:clamp(22px, 2.6vw, 32px);
+  line-height:1.35; letter-spacing:-0.02em;
+  color: var(--ink); max-width:42ch;
+}
+.pull-quote em{
+  font-style:normal; color: var(--primary); font-weight:600;
+}
+
+/* ==== Eyebrow / small label ==== */
+.eyebrow{
+  font-family:var(--font-mono); font-size:10px;
+  letter-spacing:.16em; text-transform:uppercase;
+  color: var(--ink-3); font-weight:500;
+  display:inline-flex; align-items:center; gap:8px;
+  margin-bottom:14px;
+}
+.eyebrow::before{
+  content:""; width:18px; height:1px; background:var(--primary);
+}
+
+/* ==== Reveal on scroll ==== */
+.reveal{
+  opacity:0; transform: translateY(20px);
+  transition: opacity .7s cubic-bezier(.2,.6,.2,1),
+              transform .7s cubic-bezier(.2,.6,.2,1);
+}
+.reveal.in{ opacity:1; transform:none; }
+.reveal.d1{ transition-delay:.08s; }
+.reveal.d2{ transition-delay:.16s; }
+.reveal.d3{ transition-delay:.24s; }
+.reveal.d4{ transition-delay:.32s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal{ opacity:1; transform:none; transition:none; }
+  *{ animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ==== Footer ==== */
+.footer{
+  border-top:1px solid var(--line);
+  padding: 40px 48px;
+  font-size:12.5px; color: var(--ink-3);
+  line-height:1.8; text-align:center;
+  font-family:var(--font-jp); font-weight:300;
+}
+.footer a{
+  color: var(--ink-2); text-decoration:none;
+  border-bottom:1px solid var(--line-2);
+  transition: color .15s, border-color .15s;
+}
+.footer a:hover{ color: var(--primary); border-color: var(--primary); }
+.foot-badge{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px; margin-top:14px;
+  background: var(--bg-1); border:1px solid var(--line);
+  border-radius:999px;
+  font-size:12px; color: var(--ink-2);
+  font-family:var(--font-jp);
+}
+
+/* ==== Scrollbar ==== */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-thumb{ background:var(--line-2); border-radius:6px; border:2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover{ background:var(--line-3); }
+::-webkit-scrollbar-track{ background:transparent; }
+
+/* ==== Print ==== */
+@media print{
+  :root{ --bg:#fff; --bg-1:#fff; --bg-2:#f7f4ed; }
+  @page{ size: 297mm 210mm; margin: 8mm; }
+  body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .no-print, .topbar{ display:none !important; }
+  .section{ padding: 8px !important; }
+  .section.hero{ padding:8px !important; page-break-after:avoid; }
+  .section-divider{ display:none; }
+  .reveal{ opacity:1 !important; transform:none !important; }
+  .card, .exec-wrap, .qcard{ box-shadow:none !important; }
+  .result-grid{ grid-template-columns:1fr 1fr !important; gap:10px !important; }
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 1200px){
+  .hide-lg{ display:none !important; }
+}
+@media (max-width: 980px){
+  .hide-md{ display:none !important; }
+}
+@media (max-width: 820px){
+  .hide-sm{ display:none !important; }
+
+  .topbar{ padding:0 16px; gap:10px; }
+  .brand-sub{ display:none; }
+  .nav-chapter span:not(.n):not(.done){ display:none; }
+  .nav-chapter{ padding:0 10px; min-width:36px; justify-content:center; }
+
+  .section{ padding: 56px 20px; }
+  .section.hero{ padding: 56px 20px 40px; }
+  .footer{ padding: 28px 20px; }
+
+  .stats-row{ grid-template-columns:1fr !important; gap:24px; }
+  .var-grid{ grid-template-columns: 1fr 1fr; }
+  .exec-grid{ grid-template-columns:1fr; }
+  .chapter-marker{ gap:10px; margin-bottom:20px; }
+  .chapter-line{ width:24px; }
+  .chapter-label{ font-size:10.5px; letter-spacing:.14em; }
+}
+@media (max-width: 540px){
+  .var-grid{ grid-template-columns: 1fr; }
+  .matrix{ grid-template-columns: 1fr; }
+}
+
+/* ==== View transitions ==== */
+@keyframes fadein{ from{opacity:0} to{opacity:1} }
+.view-frame{ animation: fadein .35s ease; }
+$
+
+/* ==================================================================
+   ZTELIER COMMON KIT v2.0 — UNIFICATION PATCH (AUTO-INJECTED)
+   ==================================================================
+*/
+/* ============================================================
+   Ztelier v2.0 — Common Kit Unification Patch
+   Applied to: Amp / CSFA / Endeavor / MAAZ / forg / pupy
+   Strategy: Non-destructive overlay. Adds v2 tokens + v2
+   components + micro-interaction polish on top of existing v1.
+   Fallback chains absorb CSFA's --bg-0/--ink-1 naming.
+   ============================================================ */
+
+/* ---------- v2 additive tokens (Paper) ---------- */
+:root,
+[data-theme="paper"]{
+  /* 6段階Inkの補完 (既存5段階にGhostを追加) */
+  --ink-ghost:    #D5DCE6;
+
+  /* v2 エイリアス — 「Blue」命名で v2 ガイドと整合 */
+  --blue:         var(--primary, #246CF7);
+  --blue-dark:    var(--primary-2, #1853CC);
+  --blue-tint:    var(--primary-tint, #E8EFFD);
+  --blue-glow:    rgba(36, 108, 247, 0.14);
+  --line-focus:   var(--primary, #246CF7);
+  --line-strong:  var(--line-2, #C9D1DE);
+
+  /* Semantic tints (未定義ファイル向けのフォールバック値) */
+  --trust-tint:   #EEF3E6;
+  --warn-tint:    #FAF1DF;
+  --danger-tint:  #F8E7E7;
+
+  /* Zero Trust 7 柱の固定色 (v2 標準) */
+  --p-identity:    #1853CC;
+  --p-devices:     #7BA05B;
+  --p-networks:    #5B4B9E;
+  --p-apps:        #B5832C;
+  --p-data:        #A0517E;
+  --p-visibility:  #3D8888;
+  --p-automation:  #4A6FA5;
+
+  /* v2 Horizon Gradient — 現在→未来 */
+  --horizon-from:  #E8EFFD;
+  --horizon-mid:   #DCE8FB;
+  --horizon-to:    #CFE0F9;
+
+  /* v2 radius / motion 標準 */
+  --r-sm:  6px;
+  --r-md:  10px;
+  --r-lg:  14px;
+  --r-pill: 999px;
+  --ease-z: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-fast: 180ms;
+  --dur-z:    280ms;
+  --dur-slow: 520ms;
+  --shadow-focus-v2: 0 0 0 3px var(--blue-glow);
+}
+
+/* ---------- Indigo theme 差分 ---------- */
+[data-theme="indigo"]{
+  --ink-ghost:    #2E416B;
+  --blue-glow:    rgba(91, 142, 255, 0.22);
+  --horizon-from: #0C1730;
+  --horizon-mid:  #122044;
+  --horizon-to:   #1B2D5C;
+  --trust-tint:   #14291A;
+  --warn-tint:    #2B1F0D;
+  --danger-tint:  #2B1212;
+}
+
+/* ============================================================
+   Focus ring — WCAG 2.2 AA を満たす統一リング
+   既存 outline を上書きせず、補強のみ
+   ============================================================ */
+:focus-visible{
+  outline: 2px solid var(--blue, #246CF7);
+  outline-offset: 2px;
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible{
+  outline: 2px solid var(--blue, #246CF7);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-focus-v2);
+}
+
+/* ============================================================
+   v2 Component: Chapter Marker
+   「Chapter 02  ───  Maturity · 成熟度」 パターン
+   ============================================================ */
+.zt2-chapter{
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3, var(--ink-2, #6B7A95));
+}
+.zt2-chapter__num{ color: var(--blue); font-weight: 500; }
+.zt2-chapter__line{
+  display:inline-block;
+  width: 36px; height: 1px;
+  background: var(--line-2, var(--line-1, #C9D1DE));
+}
+
+/* ============================================================
+   v2 Component: Kicker (統一仕様)
+   既存 .kicker を再定義せず、.zt2-kicker として追加
+   ============================================================ */
+.zt2-kicker{
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--blue);
+  font-weight: 500;
+  margin-bottom: 12px;
+  display: inline-block;
+}
+
+/* ============================================================
+   v2 Component: Z-Flow Grid (思考の Z 字動線)
+   ============================================================ */
+.zt2-zflow{
+  position: relative;
+  padding: 32px;
+  background: var(--bg-2, var(--bg-2, #F1F4F8));
+  border: 1px solid var(--line, var(--line-1, #E1E6EE));
+  border-radius: var(--r-lg);
+  background-image: radial-gradient(circle, var(--line-2, var(--line-strong, #C9D1DE)) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+.zt2-zflow__grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  position: relative;
+}
+.zt2-zflow__cell{
+  background: var(--bg-1, #FFFFFF);
+  border: 1px solid var(--line, var(--line-1, #E1E6EE));
+  border-radius: var(--r-md);
+  padding: 18px;
+  position: relative;
+  min-height: 120px;
+  transition: transform var(--dur-z) var(--ease-z), box-shadow var(--dur-z) var(--ease-z);
+}
+.zt2-zflow__cell.is-subject{
+  border-color: var(--blue);
+  box-shadow: var(--shadow-focus-v2);
+}
+.zt2-zflow__cell:hover{
+  transform: translateY(-1px);
+}
+.zt2-zflow__step{
+  position: absolute;
+  top: -12px; left: -12px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 4px var(--bg-2, #F1F4F8);
+}
+.zt2-zflow__step.is-supporting{ background: var(--ink-ghost); color: var(--ink-3); }
+.zt2-zflow__label{
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3, var(--ink-2));
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.zt2-zflow__title{
+  font-family: var(--font-display, var(--font-sans));
+  font-size: 15px; font-weight: 500;
+  color: var(--ink, var(--ink-1));
+  margin: 0 0 6px;
+  line-height: 1.35;
+}
+.zt2-zflow__body{
+  font-size: 12px;
+  color: var(--ink-2);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ============================================================
+   v2 Component: Horizon Bar (現在→未来の帯)
+   ============================================================ */
+.zt2-horizon{
+  background: var(--bg-1, #FFFFFF);
+  border: 1px solid var(--line, var(--line-1, #E1E6EE));
+  border-radius: var(--r-lg);
+  padding: 32px;
+}
+.zt2-horizon__track{
+  position: relative;
+  height: 64px;
+  border-radius: var(--r-md);
+  background: linear-gradient(90deg, var(--horizon-from), var(--horizon-mid), var(--horizon-to));
+  overflow: visible;
+  margin: 28px 0 16px;
+}
+.zt2-horizon__now{
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: var(--blue);
+  z-index: 2;
+}
+.zt2-horizon__now::after{
+  content: "NOW";
+  position: absolute;
+  top: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--blue);
+  letter-spacing: 0.14em;
+  background: var(--bg, var(--bg-0));
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.zt2-horizon__future{
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--p-networks);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+.zt2-horizon__future::before{ content: "→  "; font-size: 14px; }
+.zt2-horizon__stages{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+.zt2-horizon__stage{
+  padding: 14px 16px;
+  border: 1px solid var(--line, var(--line-1));
+  border-radius: var(--r-md);
+  background: var(--bg-1, #FFFFFF);
+}
+.zt2-horizon__stage.is-current{
+  border-color: var(--blue);
+  background: var(--blue-tint);
+}
+[data-theme="indigo"] .zt2-horizon__stage.is-current{
+  background: var(--bg-3);
+}
+.zt2-horizon__stage-num{
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-3, var(--ink-2));
+  margin-bottom: 4px;
+}
+.zt2-horizon__stage.is-current .zt2-horizon__stage-num{ color: var(--blue); }
+.zt2-horizon__stage-name{
+  font-family: var(--font-display, var(--font-sans));
+  font-size: 14px; font-weight: 500;
+  color: var(--ink, var(--ink-1));
+  margin-bottom: 2px;
+}
+.zt2-horizon__stage-meta{
+  font-size: 11px;
+  color: var(--ink-3, var(--ink-2));
+}
+
+/* ============================================================
+   v2 Component: Pillar Rail / Dot (7 柱分類)
+   ============================================================ */
+.zt2-pillar{
+  border-left: 3px solid var(--pillar-color, var(--blue));
+  padding-left: 12px;
+}
+.zt2-pillar-dot{
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--pillar-color, var(--blue));
+  margin-right: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.zt2-pillar--identity{    --pillar-color: var(--p-identity); }
+.zt2-pillar--devices{     --pillar-color: var(--p-devices); }
+.zt2-pillar--networks{    --pillar-color: var(--p-networks); }
+.zt2-pillar--apps{        --pillar-color: var(--p-apps); }
+.zt2-pillar--data{        --pillar-color: var(--p-data); }
+.zt2-pillar--visibility{  --pillar-color: var(--p-visibility); }
+.zt2-pillar--automation{  --pillar-color: var(--p-automation); }
+
+/* ============================================================
+   v2 Component: Ink Scale (6段階可視化)
+   ============================================================ */
+.zt2-ink-scale{
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  border: 1px solid var(--line, var(--line-1));
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg-1, #FFFFFF);
+}
+.zt2-ink-scale__item{
+  padding: 14px 12px;
+  border-right: 1px solid var(--line, var(--line-1));
+}
+.zt2-ink-scale__item:last-child{ border-right: none; }
+.zt2-ink-scale__dot{
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   既存コンポーネントの micro-interaction 統一
+   (既存の .btn / .card / .tag / .topbar を弱めに上書き)
+   ============================================================ */
+
+/* Buttons — 押下感・フォーカス統一 */
+.btn{
+  transition:
+    background var(--dur-fast) var(--ease-z),
+    border-color var(--dur-fast) var(--ease-z),
+    color var(--dur-fast) var(--ease-z),
+    box-shadow var(--dur-fast) var(--ease-z),
+    transform var(--dur-fast) var(--ease-z);
+}
+.btn:active{ transform: translateY(1px); }
+.btn.primary:focus-visible{ box-shadow: var(--shadow-focus-v2); }
+
+/* Cards — 浮き上がりの統一 */
+.card{
+  transition:
+    transform var(--dur-z) var(--ease-z),
+    box-shadow var(--dur-z) var(--ease-z),
+    border-color var(--dur-z) var(--ease-z);
+}
+
+/* Tag / Pill — v2 variants */
+.tag, .pill{
+  transition: all var(--dur-fast) var(--ease-z);
+}
+.tag--zt2-blue, .pill--zt2-blue{
+  background: var(--blue-tint);
+  color: var(--blue-dark);
+  border-color: transparent;
+}
+.tag--zt2-trust, .pill--zt2-trust{
+  background: var(--trust-tint);
+  color: var(--trust);
+  border-color: transparent;
+}
+.tag--zt2-warn, .pill--zt2-warn{
+  background: var(--warn-tint);
+  color: var(--warn);
+  border-color: transparent;
+}
+.tag--zt2-active, .pill--zt2-active{
+  background: var(--ink-0, var(--ink-deep, #001744));
+  color: #fff;
+  border-color: var(--ink-0, #001744);
+}
+
+/* Topbar — スムーズなテーマ切替 */
+.topbar{
+  transition:
+    background var(--dur-z) var(--ease-z),
+    border-color var(--dur-z) var(--ease-z);
+}
+
+/* ============================================================
+   v2 Utilities
+   ============================================================ */
+.zt2-ink-deep    { color: var(--ink-0) !important; }
+.zt2-ink-primary { color: var(--ink, var(--ink-1)) !important; }
+.zt2-ink-sec     { color: var(--ink-2) !important; }
+.zt2-ink-muted   { color: var(--ink-3) !important; }
+.zt2-ink-faint   { color: var(--ink-4) !important; }
+.zt2-ink-ghost   { color: var(--ink-ghost) !important; }
+
+.zt2-mono{
+  font-family: var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--ink-3, var(--ink-2));
+}
+
+/* Large metric (KPI) — v2 標準 */
+.zt2-metric{
+  font-family: var(--font-display, var(--font-sans));
+  font-weight: 300;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--ink, var(--ink-1));
+  letter-spacing: -0.01em;
+}
+.zt2-metric__unit{
+  font-size: 14px;
+  color: var(--ink-3);
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+/* ============================================================
+   Reduced motion — アクセシビリティ
+   ============================================================ */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Version signature (for debugging)
+   ============================================================ */
+body::before{
+  content: "";
+  /* Ztelier Common Kit v2.0 — applied */
+}$
+
+</style>
+</head>
+<body data-theme="paper">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useMemo, useRef, Fragment } = React;
+
+/* ============================================================
+   Data — 19 questions (S / L / C / L') — verbatim from forg v4.3.0
+   ============================================================ */
+const SECTIONS = [
+  {
+    key:'S', num:'01', label:'Silo', jp:'縦割り', sub:'Structure / Silo',
+    color:'var(--v-s)', badge:'S', role:'numerator',
+    roleLabel:'分子（摩擦）', roleHint:'右ほど重い＝変革の壁が厚い',
+    kicker:'Never trust the org chart.',
+    title:<>Walls we <em>built</em>,<br/>walls we must <em>unbuild</em>.</>,
+    lede:'縦割りは偶然ではない。予算・意思決定・情報流通の設計が、いつの間にか「見えない国境線」を生む。測るのは、その厚みだ。',
+    questions:[
+      {id:'s1',label:'S-01 // 予算の所在',text:'ゼロトラスト化の予算は、インフラとセキュリティで整合性が取れていますか？',hint:'インフラとセキュリティが別々に予算を確保・消化していれば、Sは最大値に近い。',lo:'一元管理',hi:'完全分離'},
+      {id:'s2',label:'S-02 // 意思決定速度',text:'新しいSaaS/AIツールを一つ導入するのに、最短で何ヶ月かかりますか？',hint:'プロセスが「スタンプラリー」になっているなら、それは組織の機能不全のサイン。',lo:'〜1ヶ月',hi:'6ヶ月以上'},
+      {id:'s3',label:'S-03 // インフォーマル連携',text:'インフラ担当とセキュリティ担当が、Slack/Teamsで雑談する共通チャンネルはありますか？',hint:'公式な会議体でしか話さないなら、そこには「見えない国境線」がある。',lo:'活発に雑談',hi:'会議のみ'},
+      {id:'s4',label:'S-04 // 業務部門可視性',text:'業務部門のアプリ開発やデータ活用の取り組みを、IT部門は把握していますか？',hint:'シャドーIT/シャドーDXが横行している場合、IT部門はリスクの全体像を掴めていない。',lo:'完全に把握',hi:'全く把握していない'},
+      {id:'s5',label:'S-05 // インシデント時の横断対応',text:'セキュリティインシデント発生時、関係部門が30分以内に集まれる体制はありますか？',hint:'有事にサイロが崩壊できるかどうか。平時の体制図は有事には役に立たない。',lo:'即時招集可能',hi:'連絡網すらない'},
+    ],
+    stats:[
+      {label:'設問数', value:'5', caption:'S-01 から S-05'},
+      {label:'役割', value:'分子', caption:'friction → 変革抵抗'},
+      {label:'対象', value:'組織構造', caption:'予算 / 決定 / 連携'},
+    ]
+  },
+  {
+    key:'L', num:'02', label:'Legacy', jp:'レガシー', sub:'Legacy debt',
+    color:'var(--v-l)', badge:'L', role:'numerator',
+    roleLabel:'分子（摩擦）', roleHint:'右ほど重い＝負債が深い',
+    kicker:"Yesterday's asset is tomorrow's drag.",
+    title:<>Maintain the <em>past</em>,<br/>or fund the <em>future</em>.</>,
+    lede:'IT予算の70〜80%が「守り」に消える国で、攻めの原資はどこから生むのか。レガシーとは古さではなく、動けない重さのこと。',
+    questions:[
+      {id:'l1',label:'L-01 // IT予算の硬直度',text:'IT予算のうち、既存システムの運用・保守（守りのIT）に消えている割合はどのくらいですか？',hint:'経産省DXレポートでは、日本企業のIT予算の70〜80%が現行維持に費やされていると指摘。この比率が高いほど変革の原資が枯渇している。',lo:'30%以下（攻め寄り）',hi:'80%以上（守り漬け）'},
+      {id:'l2',label:'L-02 // アプリ配置比率',text:'業務アプリケーションは主にどこで稼働していますか？',hint:'クラウドネイティブならレガシー度は低い。オンプレDC中心なら移行コストが大きい。',lo:'ほぼクラウド',hi:'完全オンプレ'},
+      {id:'l3',label:'L-03 // NW依存度',text:'VPN・オンプレFW・閉域網への依存度はどのくらいですか？',hint:'これらが「生命線」になっているほど、移行コストと心理的抵抗が増大。',lo:'ほぼクラウド直結',hi:'完全依存'},
+      {id:'l4',label:'L-04 // 技術的負債の自覚',text:'現在のインフラに「もう限界だ」と感じている担当者はいますか？',hint:'内側から変革の声が上がっている場合、移行への内的動機が存在する。',lo:'全員が限界を感じている',hi:'誰も問題視していない'},
+      {id:'l5',label:'L-05 // リプレース周期',text:'HW/SWの更新サイクルは計画通りに回せていますか？',hint:'延命運用が常態化している場合、脆弱性の放置と運用コストの肥大化が進行中。',lo:'計画通り',hi:'延命が常態化'},
+    ],
+    stats:[
+      {label:'設問数', value:'5', caption:'L-01 から L-05'},
+      {label:'役割', value:'分子', caption:'friction → 変革抵抗'},
+      {label:'対象', value:'技術資産', caption:'予算 / 配置 / 延命'},
+    ]
+  },
+  {
+    key:'C', num:'03', label:'Crisis', jp:'危機感', sub:'Crisis / Cost awareness',
+    color:'var(--v-c)', badge:'C', role:'denominator',
+    roleLabel:'分母（推進力）', roleHint:'右ほど強い＝変革の原動力',
+    kicker:'Urgency is the engine.',
+    title:<>Risk <em>felt</em>,<br/>not merely <em>reported</em>.</>,
+    lede:'危機感とは、役員会の空気に温度があるかどうか。インシデントを他人事と見るか、明日の自社と見るか——その差が推進力を決める。',
+    questions:[
+      {id:'c1',label:'C-01 // インシデント認知',text:'直近でセキュリティインシデント（または同業他社の被害）を経営層が認知していますか？',hint:'KADOKAWAやニコニコのケースを知っているか、自社での経験があるかが分岐点。',lo:'他人事・無関心',hi:'自社被害経験あり'},
+      {id:'c2',label:'C-02 // セキュリティの位置づけ',text:'役員会議でサイバーセキュリティは「コスト」ですか？「投資」ですか？',hint:'「投資」「ブランド保護」として語られるなら危機感は高い。「予算削減対象」なら低い。',lo:'コスト扱い',hi:'戦略投資と認識'},
+      {id:'c3',label:'C-03 // IT予算の売上高比率',text:'IT予算額と年間売上高を入力してください（比率を自動算出します）。',hint:'日本中央値3.2%（ITR 2026）/ グローバル平均5.5%（Deloitte）/ US平均8.2%（Flexera）。日本企業はグローバルの半分以下の水準。',type:'budget'},
+      {id:'c4',label:'C-04 // セキュリティ予算の独立性',text:'セキュリティ予算は独立した予算枠として確保されていますか？',hint:'IT予算の「おまけ」として扱われている場合、有事に真っ先に削られる。',lo:'IT予算の一部',hi:'独立枠＋役員承認'},
+    ],
+    stats:[
+      {label:'設問数', value:'4', caption:'C-01 から C-04'},
+      {label:'役割', value:'分母', caption:'drive → 変革原動力'},
+      {label:'対象', value:'危機認識', caption:'役員 / 投資 / 予算'},
+    ]
+  },
+  {
+    key:'LP', num:'04', label:'Leadership', jp:'変革意志', sub:'Leadership will',
+    color:'var(--v-lp)', badge:"L'", role:'denominator',
+    roleLabel:'分母（推進力）', roleHint:'右ほど強い＝推進力が高い',
+    kicker:'Someone must own the risk of change.',
+    title:<>Will without <em>skin</em><br/>is just a <em>slogan</em>.</>,
+    lede:'誰かのキャリアが懸かっていない変革は、始まる前に終わっている。「意志」とは発言ではなく、責任と予算と失敗の許容度で測る。',
+    questions:[
+      {id:'lp1',label:"L'-01 // 責任の所在",text:'このプロジェクトが失敗したとき、社内で一番「痛い目」を見るのは誰ですか？',hint:'「誰も責任を取らない」状況ならL\'はゼロ。特定の誰かのキャリアがかかっているなら本気。',lo:'誰も責任なし',hi:'明確な責任者あり'},
+      {id:'lp2',label:"L'-02 // 変革ゴールの定義",text:'変革のゴールは「システムの導入」ですか？「ビジネスの成長・リスク削減」ですか？',hint:'導入自体を目的にしているなら単なる「作業」。ビジネス価値を語れるなら変革の土壌がある。',lo:'導入が目的',hi:'ビジネス価値が目的'},
+      {id:'lp3',label:"L'-03 // 変革の起点",text:'この変革は「経営層からのトップダウン」ですか？現場チームの自発的な動きですか？',hint:'トップダウンでも現場にオーナーシップがあれば強い。どちらか一方だけだと失速リスク。',lo:'誰も動いていない',hi:'上下一致した推進力'},
+      {id:'lp4',label:"L'-04 // 経営戦略とIT戦略の連動",text:'中期経営計画にIT/DX戦略が明示的に組み込まれていますか？',hint:'経営計画にITが1行も出てこない企業は、変革の戦略的バックボーンが欠如。',lo:'IT戦略は別文書',hi:'経営計画に明示的に統合'},
+      {id:'lp5',label:"L'-05 // 失敗の許容度",text:'PoCで期待通りの結果が出なかった場合、次のPoCが承認される文化はありますか？',hint:'「一度失敗したら二度と予算がつかない」文化は、変革のアジリティを殺す最大の敵。',lo:'一発勝負',hi:'反復的な改善が許容'},
+    ],
+    stats:[
+      {label:'設問数', value:'5', caption:"L'-01 から L'-05"},
+      {label:'役割', value:'分母', caption:'drive → 変革原動力'},
+      {label:'対象', value:'意志と責任', caption:'責任 / 戦略 / 失敗許容'},
+    ]
+  },
+];
+
+/* ============================================================
+   Icons (SVG line-style)
+   ============================================================ */
+const Icon = ({name, size=20, color='currentColor'}) => {
+  const paths = {
+    rocket: <><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></>,
+    lightning: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
+    fire: <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>,
+    sleep: <><path d="M2 4l4-2 .75 1.5L3 5l4 2-.75 1.5L2 6"/><path d="M14 2l4-2 .75 1.5L15 3l4 2-.75 1.5L14 4"/><path d="M2 12h20"/><path d="M2 12a10 10 0 0020 0"/></>,
+    refresh: <><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></>,
+    printer: <><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>,
+    upload: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>,
+    warning: <><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+    shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></>,
+    arrowRight: <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
+    spark: <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6L12 2z"/>,
+    sun: <path d="M10 3a1 1 0 011 1v1a1 1 0 11-2 0V4a1 1 0 011-1zm0 11a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm7-4a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM4 10a1 1 0 01-1 1H2a1 1 0 110-2h1a1 1 0 011 1zm11.66-5.66a1 1 0 010 1.41l-.71.71a1 1 0 11-1.41-1.41l.71-.71a1 1 0 011.41 0zM5.46 14.54a1 1 0 010 1.41l-.71.71a1 1 0 11-1.41-1.41l.71-.71a1 1 0 011.41 0zm10.2 0a1 1 0 011.41 0l.71.71a1 1 0 11-1.41 1.41l-.71-.71a1 1 0 010-1.41zM5.46 5.46a1 1 0 010-1.41l-.71-.71a1 1 0 011.41-1.41l.71.71a1 1 0 01-1.41 2.82zM10 6a4 4 0 100 8 4 4 0 000-8z"/>,
+    moon: <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+      {paths[name]}
+    </svg>
+  );
+};
+
+/* ============================================================
+   Counter with IntersectionObserver-triggered easing
+   ============================================================ */
+function Counter({value, className, decimals}){
+  const isNum = /^-?[\d,.]+$/.test(String(value));
+  const target = isNum ? parseFloat(String(value).replace(/,/g,'')) : 0;
+  const ref = useRef(null);
+  const prevTargetRef = useRef(null); // null = not yet animated
+
+  const fmt = (v) => decimals!=null ? v.toFixed(decimals)
+    : Number.isInteger(target) ? Math.round(v).toString()
+    : v.toFixed(String(value).split('.')[1]?.length||1);
+
+  const finalDisplay = !isNum ? String(value) : fmt(target);
+
+  useEffect(()=>{
+    const el = ref.current;
+    if (!el || !isNum) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prev = prevTargetRef.current ?? 0;
+    prevTargetRef.current = target;
+    if (reduce || Math.abs(target - prev) < 0.001){
+      el.textContent = fmt(target);
+      return;
+    }
+
+    let cancelled = false, timerId = 0;
+    const dur = 1100, t0 = Date.now();
+    const tick = () => {
+      if (cancelled) return;
+      const k = Math.min(1, (Date.now()-t0)/dur);
+      const ease = 1 - Math.pow(1-k, 3);
+      const v = prev + (target-prev) * ease;
+      el.textContent = fmt(v);
+      if (k<1) timerId = setTimeout(tick, 30);
+      else el.textContent = fmt(target);
+    };
+    el.textContent = fmt(prev);
+    timerId = setTimeout(tick, 30);
+    return ()=>{ cancelled = true; clearTimeout(timerId); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, isNum]);
+
+  return <span ref={ref} className={className}>{finalDisplay}</span>;
+}
+
+/* ============================================================
+   Hero + Chapter marker
+   ============================================================ */
+function ChapterMarker({num, label}){
+  return (
+    <div className="chapter-marker reveal">
+      <span className="chapter-num">Chapter {num}</span>
+      <span className="chapter-line"/>
+      <span className="chapter-label">{label}</span>
+    </div>
+  );
+}
+
+function Hero({num, chapterLabel, kicker, title, lede, stats, action}){
+  return (
+    <section className="section hero">
+      <div className="container">
+        <ChapterMarker num={num} label={chapterLabel}/>
+        {kicker && <div className="kicker reveal d1">{kicker}</div>}
+        <h1 className="h-display reveal d1" style={{
+          fontSize:'clamp(40px, 7.5vw, 96px)',
+          lineHeight:1.05, margin:'0 0 28px', maxWidth:'16ch', fontWeight:500
+        }}>{title}</h1>
+        {lede && <p className="lede-jp reveal d2">{lede}</p>}
+        {stats && (
+          <div className="reveal d3 stats-row" style={{
+            gridTemplateColumns:`repeat(${stats.length}, minmax(0,1fr))`,
+          }}>
+            {stats.map((s,i)=>(
+              <div key={i}>
+                <div className="stat-label">{s.label}</div>
+                <div className="stat-value">
+                  <Counter value={s.value} className="metric-lg num" decimals={s.decimals}/>
+                  {s.unit && <span className="stat-unit">{s.unit}</span>}
+                </div>
+                {s.caption && <div className="stat-caption">{s.caption}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+        {action && <div className="reveal d4" style={{marginTop:40}}>{action}</div>}
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   TopBar
+   ============================================================ */
+function TopBar({view, setView, theme, setTheme, forgStr, forgColor, forgStatus, answered, sectionsAnswered}){
+  const tabs = [
+    {id:'intro', num:'00', label:'Intro'},
+    {id:'S',     num:'01', label:'Silo'},
+    {id:'L',     num:'02', label:'Legacy'},
+    {id:'C',     num:'03', label:'Crisis'},
+    {id:'LP',    num:'04', label:'Leadership'},
+    {id:'result',num:'05', label:'Result'},
+  ];
+  return (
+    <div className="topbar" role="navigation" aria-label="Chapters">
+      <div className="brand">
+        <div className="brand-mark" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 32 32">
+            <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.25" style={{color:'var(--ink)'}}/>
+            <circle cx="16" cy="16" r="9" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.5" style={{color:'var(--ink)'}}/>
+            <circle cx="16" cy="16" r="3" fill="var(--primary)"/>
+          </svg>
+        </div>
+        <div className="brand-text">
+          <span className="brand-title">F<sub>org</sub> <em>Journey</em></span>
+          <span className="brand-sub hide-sm">Organizational Friction Atelier · v4.3</span>
+        </div>
+      </div>
+
+      <div className="spacer"/>
+
+      <nav className="nav-chapters hide-md" role="tablist">
+        {tabs.map(t=>{
+          const done = sectionsAnswered && sectionsAnswered[t.id];
+          return (
+            <button key={t.id} onClick={()=>setView(t.id)}
+              className={`nav-chapter ${view===t.id?'on':''}`} role="tab"
+              aria-selected={view===t.id}>
+              <span className="n">{t.num}</span>
+              <span>{t.label}</span>
+              {done && <span className="done" title="回答済"/>}
+            </button>
+          );
+        })}
+      </nav>
+
+      <div className="spacer"/>
+
+      <div className="top-meta">
+        {answered>0 && (
+          <div className="fbadge hide-lg" title={forgStatus}>
+            <span className="lbl">F<sub>org</sub></span>
+            <span className="val" style={{color:forgColor}}>{forgStr}</span>
+          </div>
+        )}
+        <span className="tag live hide-sm"><span className="dot"/>ZT Readiness</span>
+        <button className="theme-toggle" onClick={()=>setTheme(theme==='paper'?'indigo':'paper')} aria-label="Toggle theme">
+          <Icon name={theme==='paper'?'sun':'moon'} size={16}/>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   Question card + Scoring
+   ============================================================ */
+function QuestionCard({q, role, value, onScore, sc, onSc}){
+  const answered = value > 0 || (q.type==='budget' && sc.itBudget>0 && sc.revenue>0);
+  return (
+    <div className={`qcard ${answered?'answered':''}`}>
+      <div className="qlabel">{q.label}</div>
+      <div className="qtext">{q.text}</div>
+      {q.hint && <div className="qhint">{q.hint}</div>}
+      {q.type==='budget'
+        ? <BudgetInput sc={sc} onSc={onSc}/>
+        : <ScoreButtons q={q} role={role} value={value} onScore={onScore}/>}
+    </div>
+  );
+}
+
+function ScoreButtons({q, role, value, onScore}){
+  const isNum = role==='numerator';
+  return (
+    <div>
+      <div className="score-row">
+        {[1,2,3,4,5].map(v=>{
+          const sel = value===v;
+          let cls = '';
+          if (sel){
+            if (isNum){
+              cls = v<=2 ? 'sel-lo' : v===3 ? 'sel-mi' : 'sel-hi';
+            } else {
+              cls = v<=2 ? 'sel-dr-lo' : v===3 ? 'sel-dr-mi' : 'sel-dr-hi';
+            }
+          }
+          return <button key={v} className={`sbtn ${cls}`} onClick={()=>onScore(v)} aria-label={`Score ${v}`}>{v}</button>;
+        })}
+      </div>
+      <div className="slabels"><span>{q.lo}</span><span>{q.hi}</span></div>
+    </div>
+  );
+}
+
+function BudgetInput({sc, onSc}){
+  const ratio = (sc.revenue>0 && sc.itBudget>0) ? (sc.itBudget/sc.revenue)*100 : null;
+  const level = ratio==null ? null :
+    ratio<1 ? '深刻な投資不足' :
+    ratio<3 ? '日本平均以下' :
+    ratio<5 ? '日本平均〜グローバル平均' :
+    ratio<8 ? 'グローバル平均水準' : '先進的';
+  const c = ratio==null ? 'var(--ink-3)' :
+    ratio<1 ? 'var(--danger)' :
+    ratio<3 ? 'var(--warn)' :
+    ratio<5 ? 'var(--primary)' :
+    ratio<8 ? 'var(--trust)' : 'var(--info)';
+  return (
+    <div style={{display:'flex', flexDirection:'column', gap:10}}>
+      <div style={{display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
+        <span style={{fontSize:13, color:'var(--ink-2)', width:90, fontWeight:500}}>IT予算額:</span>
+        <input className="ninput" type="number" value={sc.itBudget||''} onChange={e=>onSc('itBudget', parseFloat(e.target.value)||0)} placeholder="30" style={{width:120}}/>
+        <span style={{fontSize:12, color:'var(--ink-3)'}}>億円</span>
+      </div>
+      <div style={{display:'flex', alignItems:'center', gap:10, flexWrap:'wrap'}}>
+        <span style={{fontSize:13, color:'var(--ink-2)', width:90, fontWeight:500}}>年間売上高:</span>
+        <input className="ninput" type="number" value={sc.revenue||''} onChange={e=>onSc('revenue', parseFloat(e.target.value)||0)} placeholder="5000" style={{width:120}}/>
+        <span style={{fontSize:12, color:'var(--ink-3)'}}>億円</span>
+      </div>
+      {ratio!=null && (
+        <div style={{
+          fontSize:12, color:c, marginTop:4,
+          padding:'10px 14px', background:'var(--bg-1)',
+          borderRadius:10,
+          border:`1px solid ${c==='var(--ink-3)'?'var(--line)':`color-mix(in oklab, ${c} 30%, var(--line))`}`
+        }}>
+          IT予算比率: <span className="mono" style={{fontWeight:500, fontSize:14}}>{ratio.toFixed(1)}%</span>（{level}）
+          <div style={{fontSize:10, color:'var(--ink-3)', marginTop:4, fontFamily:'var(--font-mono)', letterSpacing:'.02em'}}>
+            JP 3.2% (ITR) · Global 5.5% (Deloitte) · US 8.2% (Flexera)
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   Main App
+   ============================================================ */
+function App(){
+  const [view, setView] = useState('intro');
+  const [theme, setTheme] = useState(() => localStorage.getItem('forg:theme') || 'paper');
+  const [customer, setCustomer] = useState('');
+  const [sc, setSc] = useState({
+    s1:0,s2:0,s3:0,s4:0,s5:0,
+    l1:0,l2:0,l3:0,l4:0,l5:0,
+    c1:0,c2:0,c4:0,
+    lp1:0,lp2:0,lp3:0,lp4:0,lp5:0,
+    itBudget:0, revenue:0
+  });
+
+  const up = (k,v) => setSc(p=>({...p,[k]:v}));
+  const onSc = up;
+
+  useEffect(()=>{
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('forg:theme', theme);
+  },[theme]);
+
+  useEffect(()=>{
+    window.scrollTo({top:0, behavior:'smooth'});
+  },[view]);
+
+  useEffect(()=>{
+    const els = document.querySelectorAll('.reveal:not(.in)');
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if (e.isIntersecting) e.target.classList.add('in'); });
+    }, { rootMargin:'-5% 0px -5% 0px', threshold:0.05 });
+    els.forEach(el=>io.observe(el));
+    return ()=>io.disconnect();
+  },[view]);
+
+  /* ========== calculations (verbatim from forg v4.3.0) ========== */
+  const calc = useMemo(()=>{
+    const sVals = [sc.s1,sc.s2,sc.s3,sc.s4,sc.s5].filter(v=>v>0);
+    const S = sVals.length>0 ? sVals.reduce((a,b)=>a+b,0)/sVals.length : 0;
+
+    const lVals = [sc.l1,sc.l2,sc.l3,sc.l4,sc.l5].filter(v=>v>0);
+    const L = lVals.length>0 ? lVals.reduce((a,b)=>a+b,0)/lVals.length : 0;
+
+    let budgetRatio = 0, budgetScore = 0;
+    if (sc.revenue>0 && sc.itBudget>0){
+      budgetRatio = (sc.itBudget/sc.revenue)*100;
+      if      (budgetRatio<1) budgetScore=1;
+      else if (budgetRatio<3) budgetScore=2;
+      else if (budgetRatio<5) budgetScore=3;
+      else if (budgetRatio<8) budgetScore=4;
+      else                    budgetScore=5;
+    }
+
+    const cVals = [sc.c1,sc.c2,budgetScore,sc.c4].filter(v=>v>0);
+    const C = cVals.length>0 ? cVals.reduce((a,b)=>a+b,0)/cVals.length : 0;
+
+    const lpVals = [sc.lp1,sc.lp2,sc.lp3,sc.lp4,sc.lp5].filter(v=>v>0);
+    const lp_raw = lpVals.length>0 ? lpVals.reduce((a,b)=>a+b,0)/lpVals.length : 0;
+
+    let lp_adj = lp_raw;
+    const contradictions = [];
+    if (S>=4 && lp_raw>=4){
+      lp_adj = lp_raw*0.85;
+      contradictions.push({title:"S×L' 乖離：「口先リーダーシップ」の疑い",
+        desc:'変革意志（L\'）は高いが縦割り度（S）も高い。組織の壁が実際に存在する中で「やる気がある」と自己申告している場合、権限が伴っていない可能性があります。横断チームの結成と権限委譲が先決です。'});
+    }
+    if (C<=2 && lp_raw>=4){
+      lp_adj = lp_raw*0.9;
+      contradictions.push({title:"C×L' 逆相関：「孤軍奮闘」リスク",
+        desc:'危機感（C）が低いのに変革意志（L\'）が高い。リーダーが先走り、組織が付いてきていない状態です。まずCを上げる——想定被害額の可視化と経営層への定量的な危機感醸成が優先です。'});
+    }
+    if (C>=4 && lp_raw<=2){
+      contradictions.push({title:"C×L' 乖離：「外圧待ち・消去法型」",
+        desc:'危機感（C）は高いのに変革意志（L\'）が低い。最も典型的な「外圧依存」パターンです。内部の変革チームを先に作り、オーナーシップを育てることが最重要です。'});
+    }
+    if (sc.s4>=4 && sc.lp4>=4){
+      contradictions.push({title:"S4×L'4 乖離：「計画倒れ」リスク",
+        desc:'経営計画にIT戦略は組み込まれているが、業務部門の取り組みをIT部門が把握していない。絵に描いた餅になるリスクがあります。業務部門との定期的なすり合わせ体制を構築してください。'});
+    }
+    if (budgetScore<=2 && budgetScore>0 && sc.c2>=4){
+      contradictions.push({title:'C2×C3 乖離：「本音と建前」の疑い',
+        desc:'セキュリティを「投資」と認識しているが、IT予算比率が低い。言葉と行動が一致していません。経営層の「投資」宣言を予算措置に転換する具体的なアクションが必要です。'});
+    }
+    if (sc.l1>=4 && budgetScore>=4){
+      contradictions.push({title:'L1×C3 乖離：「金はあるのに動けない」症候群',
+        desc:'IT予算比率は高水準だが、その大半が運用維持に消えている。予算の「量」ではなく「質」の問題です。固定費の圧縮によって攻めの原資を捻出する構造改革が必要です。'});
+    }
+
+    const LP = lp_adj;
+    const denom = C*LP;
+    const numer = S*L;
+    let forg = denom>0 ? numer/denom : (S>0 ? 99 : 0);
+
+    const c_high = C>=3;
+    const lp_high = LP>=3;
+    let archetype, arcIcon, arcColor, arcDesc, arcCell;
+    if (c_high && lp_high){
+      archetype='変革の臨界点（Zenith型）'; arcIcon='rocket'; arcColor='var(--trust)';
+      arcDesc='危機感と変革意志が高水準で揃っている、最も変革が加速しやすい状態です。AWでのTO-BE策定にすぐ着手できます。Start Small, Scale Fast。';
+      arcCell='tr';
+    } else if (!c_high && lp_high){
+      archetype='孤立無援・理想家型'; arcIcon='lightning'; arcColor='var(--warn)';
+      arcDesc='推進リーダーの熱量は本物ですが、組織全体の危機感がまだ醸成されていません。想定被害額の可視化とCSFギャップ分析を先行させてください。';
+      arcCell='tl';
+    } else if (c_high && !lp_high){
+      archetype='外圧依存・消去法型'; arcIcon='fire'; arcColor='var(--danger)';
+      arcDesc='危機感は高いが、変革を自分事として引き受けるリーダーシップが不足。内部チャンピオンを特定し、変革ストーリーを内面化させてください。';
+      arcCell='br';
+    } else {
+      archetype='安穏・思考停止型'; arcIcon='sleep'; arcColor='var(--ink-3)';
+      arcDesc='危機感・変革意志ともに低く、正常性バイアスが働いている状態です。同業他社のインシデント事例で「自社に起きたら」をリアルに体感させてください。';
+      arcCell='bl';
+    }
+
+    let damage = 0;
+    if (sc.revenue>0){
+      const daily = sc.revenue/365;
+      damage = daily*14*0.2 + 2;
+    }
+
+    const recs = [];
+    if (S>=4) recs.push({p:1,t:'横断変革チームの結成（S削減）',d:'インフラ・セキュリティ・業務部門の横断チームを経営層スポンサー付きで結成し、予算とKPIを統合してください。'});
+    if (sc.s4>=4) recs.push({p:1,t:'シャドーIT/DXの棚卸し（S4削減）',d:'業務部門が独自に導入しているSaaS・AIツールを全社棚卸しし、リスクと効果の両面で可視化してください。'});
+    if (L>=4) recs.push({p:1,t:'「守りのIT」比率の可視化と圧縮（L削減）',d:'IT予算の大半が運用維持に消えている状態です。ゼロトラスト統合による固定資産削減シミュレーションを提示し、「攻めのIT」への原資創出を提案してください。'});
+    if (sc.l1>=4) recs.push({p:1,t:'IT予算の攻守比率を経営層にベンチマーク提示',d:'DXレポートが指摘する「70-80%が守りに消える」構造そのものです。運用維持コストの削減ロードマップと、削減分の再投資計画を策定してください。'});
+    if (sc.l2>=4) recs.push({p:1,t:'クラウドリフト＆シフト計画の策定',d:'オンプレ依存度が高い状態です。業務アプリのクラウド移行優先順位を決め、ZTNA経由のアクセスに切り替える計画を策定してください。'});
+    if (C<=2 && cVals.length>0) recs.push({p:1,t:'想定被害額の定量化でCを引き上げる',d:'経営層が「自分事」になっていません。同業他社のインシデント事例と自社の想定被害額算出を実施し、「未来の外圧を前借り」させてください。'});
+    if (budgetScore<=2 && budgetScore>0) recs.push({p:1,t:'IT投資比率の引き上げ提案',d:`IT予算の売上高比率が${budgetRatio.toFixed(1)}%で、日本中央値（3.2%）すら下回っています。グローバル平均は5.5%、US平均は8.2%。経営層にベンチマークデータを提示し、競争力維持に必要な投資水準を議論してください。`});
+    if (LP<=2 && lpVals.length>0) recs.push({p:1,t:'内部チャンピオンの特定と巻き込み',d:'L\'が不足しています。「失敗した時に最も痛い目を見る人」を特定し、個別ストーリーを作ってください。'});
+    if (sc.lp4<=2 && sc.lp4>0) recs.push({p:1,t:'中計へのIT戦略組み込み',d:'経営戦略とIT戦略が分離しています。次期中計策定時にIT/DX戦略を必須議題として組み込む提案をしてください。'});
+    if (sc.lp5<=2 && sc.lp5>0) recs.push({p:2,t:'PoC文化の醸成（失敗許容度の向上）',d:'「一発勝負」文化が変革のアジリティを殺しています。小規模PoCの反復を前提とした予算枠（失敗予算）の設定を提案してください。'});
+    if (S>=3 && S<4) recs.push({p:2,t:'インフォーマル連携の意図的な創出',d:'横断チャンネル設置など、小さな接点を増やすことで自然に縦割りを溶かしてください。'});
+    if (sc.l4>=4) recs.push({p:2,t:'現場の「限界感」を経営層に伝達',d:'担当者が限界を感じていない場合、変革の内的動機が生まれません。運用工数の可視化と将来リスクのシミュレーションで危機感を醸成してください。'});
+    if (c_high && lp_high) recs.push({p:2,t:'TO-BE設計のスコープを今すぐ画定する',d:'CISA ZTMM v2.0を参照しながら、自社の優先柱を3ヶ月以内に確定しPOCスコープを絞り込んでください。'});
+    recs.push({p:3,t:'Start Small, Scale Fast の実行計画',d:'最も攻撃表面が大きい領域を1つ選び、完成形を小規模で先行導入してください。'});
+    recs.sort((a,b)=>a.p-b.p);
+
+    const answered = Object.entries(sc).filter(([k,v])=>v>0 && k!=='itBudget' && k!=='revenue').length + (sc.itBudget>0 && sc.revenue>0 ? 1 : 0);
+
+    const INDUSTRY_AVG = { default:{ S:3.0, L:3.5, C:2.8, LP:2.8 }};
+    const avg = INDUSTRY_AVG.default;
+    const deviations = {
+      S:  S  - avg.S,
+      L:  L  - avg.L,
+      C:  avg.C  - C,
+      LP: avg.LP - LP
+    };
+    const priorityOrder = ['LP','S','C','L'];
+    let dominantVar = priorityOrder[0];
+    for (const k of priorityOrder.slice(1)){
+      if (deviations[k] > deviations[dominantVar]) dominantVar = k;
+    }
+    const PATTERN_META = {
+      S:  { id:'silo_strong',     name:'縦割りが強い',
+            diagnosis:'縦割りの壁が厚く、横断の意思決定が通らない',
+            action:'次の経営会議で、横断変革チームの経営スポンサーを1人指名する',
+            kotter:'Kotter Step 2 (Coalition)' },
+      L:  { id:'legacy_heavy',    name:'技術的負債が重い',
+            diagnosis:'IT予算の大半が「守りのIT」に消えている',
+            action:'「いつまでにどの業務環境を現代化するか」の期限をボードで合意する',
+            kotter:'Kotter Step 4 (Communicate)' },
+      C:  { id:'crisis_weak',     name:'危機感が弱い',
+            diagnosis:'経営層が同業他社のインシデントを「他人事」と捉えている',
+            action:'同業被害事例と自社の想定被害額を、次の役員会で定量提示する',
+            kotter:'Kotter Step 1 (Urgency)' },
+      LP: { id:'leadership_weak', name:'変革意志が弱い',
+            diagnosis:'変革失敗時に痛い目を見る責任者が特定されていない',
+            action:'次のQで、セキュリティ投資の意思決定権を持つ事業責任者を1人指名する',
+            kotter:'Kotter Step 3 (Vision)' }
+    };
+    const pm = PATTERN_META[dominantVar];
+    const dominantPattern = {
+      pattern_id: pm.id,
+      pattern_name_ja: pm.name,
+      diagnosis_ja: pm.diagnosis,
+      most_deviated_variable: dominantVar,
+      deviation: deviations[dominantVar]
+    };
+    const suggestion = {
+      action_ja: pm.action,
+      reference_framework: pm.kotter,
+      common_footer_ja: 'セキュリティ対策は手段です。守るべき事業価値が先に定義されている必要があります'
+    };
+    const forgIndustryAvg = (avg.S*avg.L)/(avg.C*avg.LP);
+
+    return {
+      S,L,C,LP,forg,archetype,arcIcon,arcColor,arcDesc,arcCell,
+      contradictions, damage, recs, answered, budgetRatio, budgetScore,
+      dominantPattern, suggestion, forgIndustryAvg
+    };
+  },[sc]);
+
+  const forgStr = calc.forg>10 ? '10.0+' : calc.forg.toFixed(2);
+  const forgColor = calc.forg<1 ? 'var(--trust)' : calc.forg<2 ? 'var(--warn)' : 'var(--danger)';
+  const forgStatus = calc.forg===0 ? '入力待ち…' : calc.forg<1 ? '変革の加速帯' : calc.forg<2 ? '変革の停滞帯' : '変革の膠着帯';
+
+  const currentSection = SECTIONS.find(s=>s.key===view);
+  const nextMap = {intro:'S', S:'L', L:'C', C:'LP', LP:'result'};
+
+  const sectionsAnswered = useMemo(() => {
+    const m = { intro: calc.answered>0 };
+    SECTIONS.forEach(sec => {
+      const done = sec.questions.every(q => q.type==='budget'
+        ? (sc.itBudget>0 && sc.revenue>0)
+        : (sc[q.id]||0) > 0);
+      m[sec.key] = done;
+    });
+    m.result = calc.answered >= 10;
+    return m;
+  }, [sc, calc.answered]);
+
+  return (
+    <div className="app">
+      <TopBar view={view} setView={setView} theme={theme} setTheme={setTheme}
+              forgStr={forgStr} forgColor={forgColor} forgStatus={forgStatus}
+              answered={calc.answered} sectionsAnswered={sectionsAnswered}/>
+
+      <main style={{flex:1}}>
+        <div className="view-frame" key={view}>
+          {view==='intro' && <IntroView setView={setView} calc={calc} sc={sc} customer={customer} setCustomer={setCustomer} forgStr={forgStr} forgColor={forgColor} forgStatus={forgStatus}/>}
+
+          {currentSection && <ChapterView section={currentSection} sc={sc} up={up} onSc={onSc} setView={setView} nextKey={nextMap[view]}/>}
+
+          {view==='result' && <ResultView calc={calc} sc={sc} customer={customer} forgStr={forgStr} forgColor={forgColor} forgStatus={forgStatus} setView={setView} setSc={setSc}/>}
+        </div>
+      </main>
+
+      <footer className="footer">
+        <div>F<sub>org</sub> Journey · 組織摩擦診断 v4.3 — Organizational Friction Atelier</div>
+        <div style={{marginTop:8, fontSize:11.5, color:'var(--ink-4)'}}>
+          19 questions (S:5 / L:5 / C:4 / L':5) · ITR 2026 · Deloitte · Flexera benchmarks
+        </div>
+        <div className="foot-badge no-print">
+          <span style={{color:'var(--trust)', display:'inline-flex'}}><Icon name="shield" size={14}/></span>
+          <span>完全ローカル動作 — 入力データは外部に一切送信されません。</span>
+        </div>
+        <div style={{marginTop:14, fontSize:11.5, color:'var(--ink-4)'}}>
+          Designed by <a href="https://www.linkedin.com/in/takayoshi-takaoka/" target="_blank" rel="noopener">髙岡 隆佳</a> · Evangelist & Architect, <a href="https://www.zscaler.com/" target="_blank" rel="noopener">Zscaler</a>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ============================================================
+   Intro view
+   ============================================================ */
+function IntroView({setView, calc, sc, customer, setCustomer, forgStr, forgColor, forgStatus}){
+  return (
+    <Fragment>
+      <Hero
+        num="00"
+        chapterLabel="Cover · 序章"
+        kicker="Why DX and security don't move together."
+        title={<>Friction is not a <em>feeling</em>.<br/>It is a <span className="mark-line">measurable force</span>.</>}
+        lede={<>組織変革の「摩擦」を物理学の摩擦係数になぞらえて定量化する。分子は縦割り×レガシー、分母は危機感×変革意志。<br/>F<sub>org</sub> = (S × L) / (C × L') ——この比が小さいほど、変革は加速する。</>}
+        stats={[
+          {label:'Questions', value:'19', caption:"S:5 · L:5 · C:4 · L':5"},
+          {label:'Time', value:'10', unit:'min', caption:'Approximate'},
+          {label:'Outputs', value:'4', caption:'F / archetype / contradictions / next'},
+        ]}
+        action={
+          <div style={{display:'flex', gap:12, flexWrap:'wrap'}}>
+            <button className="btn primary" onClick={()=>setView('S')}>
+              診断を始める
+              <Icon name="arrowRight" size={14}/>
+            </button>
+            {calc.answered>0 && (
+              <button className="btn" onClick={()=>setView('result')}>
+                結果を見る（{calc.answered}/19）
+              </button>
+            )}
+          </div>
+        }
+      />
+      <div className="section-divider"/>
+
+      <section className="section">
+        <div className="container">
+          <ChapterMarker num="00.2" label="The four variables · 四つの変数"/>
+          <div className="reveal" style={{marginBottom:20}}>
+            <h2 className="h-display" style={{fontSize:'clamp(28px, 4vw, 48px)', margin:0, maxWidth:'20ch', lineHeight:1.1, fontWeight:500}}>
+              二つが<em>重石</em>、二つが<em>推進力</em>。
+            </h2>
+          </div>
+          <div className="reveal d1 var-grid">
+            {[
+              {k:'S',  em:'Silo',       ja:'縦割り',     role:'分子 · friction', desc:'部門間の分断度。予算の分離、意思決定の遅さ、シャドーITの放置。', color:'var(--v-s)'},
+              {k:'L',  em:'Legacy',     ja:'レガシー',   role:'分子 · friction', desc:'技術的負債の重さ。予算の硬直、オンプレ依存、延命運用。',        color:'var(--v-l)'},
+              {k:'C',  em:'Crisis',     ja:'危機感',     role:'分母 · drive',    desc:'リスクに対する金銭的認識。インシデント認知、IT投資比率、予算の独立性。', color:'var(--v-c)'},
+              {k:"L'", em:'Leadership', ja:'変革意志',   role:'分母 · drive',    desc:'変革断行の覚悟。責任の所在、経営×IT連動、失敗の許容度。',       color:'var(--v-lp)'},
+            ].map((v,i)=>(
+              <div key={i} className="var-card" style={{'--var-color':v.color}}>
+                <div className="k">{v.k} <em>{v.em}</em></div>
+                <div className="kja">{v.ja}</div>
+                <div className="kdesc">{v.desc}</div>
+                <div className="role-tag">{v.role}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider"/>
+
+      <section className="section">
+        <div className="container">
+          <ChapterMarker num="00.3" label="How to read F · F値の読み方"/>
+          <div style={{display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:40, alignItems:'center'}} className="reveal">
+            <div>
+              <div className="pull-quote">
+                <em>F &lt; 1.0</em> は変革の加速帯、<em>1.0〜2.0</em> は停滞帯、<em>F &gt; 2.0</em> は膠着帯。<br/>
+                比であるから、分母を2倍にするか分子を半分にするか——どちらでも効く。
+              </div>
+            </div>
+            <div>
+              <div className="fband-card">
+                <div className="fband-head">
+                  <span>band</span><span>status</span>
+                </div>
+                {[
+                  {b:'F < 1.0', s:'変革の加速帯', c:'var(--trust)'},
+                  {b:'1.0 – 2.0', s:'変革の停滞帯', c:'var(--warn)'},
+                  {b:'F > 2.0', s:'変革の膠着帯', c:'var(--danger)'},
+                ].map((r,i)=>(
+                  <div key={i} className="fband-row">
+                    <span className="b" style={{color:r.c}}>{r.b}</span>
+                    <span className="s" style={{color:r.c}}>{r.s}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider"/>
+
+      <section className="section tight">
+        <div className="container">
+          <div className="cust-strip reveal">
+            <label>顧客名:</label>
+            <input value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="組織名（任意）" className="ninput" style={{textAlign:'left', flex:1, minWidth:180, maxWidth:360}}/>
+            <div style={{flex:1}}/>
+            <button className="btn accent" onClick={()=>setView('S')}>
+              Chapter 01 · Silo →
+            </button>
+          </div>
+        </div>
+      </section>
+    </Fragment>
+  );
+}
+
+/* ============================================================
+   Chapter view (S / L / C / LP)
+   ============================================================ */
+function ChapterView({section, sc, up, onSc, setView, nextKey}){
+  const nextLabel = nextKey==='result' ? 'Result · 結果' : SECTIONS.find(s=>s.key===nextKey)?.label;
+  const nextNum   = nextKey==='result' ? '05'           : SECTIONS.find(s=>s.key===nextKey)?.num;
+
+  const sectionAnswered = section.questions.filter(q =>
+    q.type==='budget' ? (sc.itBudget>0 && sc.revenue>0) : sc[q.id]>0
+  ).length;
+
+  return (
+    <Fragment>
+      <Hero
+        num={section.num}
+        chapterLabel={`${section.sub} · ${section.jp}`}
+        kicker={section.kicker}
+        title={section.title}
+        lede={section.lede}
+        stats={section.stats}
+      />
+      <div className="section-divider"/>
+
+      <section className="section">
+        <div className="container">
+          <ChapterMarker num={`${section.num}.2`} label={`${section.label} — ${section.jp}`}/>
+
+          <div className="reveal" style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:18, marginBottom:24}}>
+            <h2 className="h-display" style={{fontSize:'clamp(26px, 3.6vw, 44px)', margin:0, maxWidth:'24ch', lineHeight:1.1, fontWeight:500}}>
+              {section.questions.length}問で、あなたの組織の<em>{section.jp}</em>を測る。
+            </h2>
+            <span className={`role-pill ${section.role==='numerator'?'num':'den'}`}>
+              <Icon name={section.role==='numerator'?'warning':'spark'} size={12}/>
+              {section.roleLabel}
+            </span>
+          </div>
+
+          <div className="sec-sum reveal d1">
+            <span className="mono" style={{color:section.color, fontWeight:500}}>
+              {section.role==='numerator'?'// NUMERATOR · 分子':'// DENOMINATOR · 分母'}
+            </span>
+            <span>—</span>
+            <span>{section.roleHint}</span>
+            <span style={{flex:1}}/>
+            <span className="mono" style={{color:'var(--ink-3)'}}>{sectionAnswered} / {section.questions.length} 回答済</span>
+          </div>
+
+          <div className="reveal d2">
+            {section.questions.map(q=>(
+              <QuestionCard key={q.id} q={q} role={section.role}
+                            value={sc[q.id]||0}
+                            onScore={(v)=>up(q.id, v)}
+                            sc={sc} onSc={onSc}/>
+            ))}
+          </div>
+
+          <div className="reveal d3" style={{marginTop:40, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:14}}>
+            <button className="btn ghost" onClick={()=>{
+              const idx = SECTIONS.findIndex(s=>s.key===section.key);
+              const prev = idx>0 ? SECTIONS[idx-1].key : 'intro';
+              setView(prev);
+            }}>
+              ← 戻る
+            </button>
+            {nextKey && (
+              <button className="btn primary" onClick={()=>setView(nextKey)}>
+                Chapter {nextNum} · {nextLabel} →
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+    </Fragment>
+  );
+}
+
+/* ============================================================
+   Result view
+   ============================================================ */
+function ResultView({calc, sc, customer, forgStr, forgColor, forgStatus, setView, setSc}){
+  const vars = [
+    {k:'S',  v:calc.S,  c:'var(--v-s)',  ja:'縦割り',    role:'分子'},
+    {k:'L',  v:calc.L,  c:'var(--v-l)',  ja:'レガシー',  role:'分子'},
+    {k:'C',  v:calc.C,  c:'var(--v-c)',  ja:'危機感',    role:'分母'},
+    {k:"L'", v:calc.LP, c:'var(--v-lp)', ja:'変革意志',  role:'分母'},
+  ];
+
+  const patternColorMap = {
+    silo_strong:     'var(--v-s)',
+    legacy_heavy:    'var(--v-l)',
+    crisis_weak:     'var(--v-c)',
+    leadership_weak: 'var(--v-lp)'
+  };
+  const execColor = patternColorMap[calc.dominantPattern?.pattern_id] || 'var(--primary)';
+
+  const doReset = () => {
+    setSc({
+      s1:0,s2:0,s3:0,s4:0,s5:0,
+      l1:0,l2:0,l3:0,l4:0,l5:0,
+      c1:0,c2:0,c4:0,
+      lp1:0,lp2:0,lp3:0,lp4:0,lp5:0,
+      itBudget:0, revenue:0
+    });
+    setView('S');
+  };
+
+  const doExport = () => {
+    try {
+      /* ③ canonical meta helpers (ztelier共通) */
+      const makeSessionId = (name) => {
+        const slug = String(name || 'unnamed')
+          .trim().toLowerCase()
+          .replace(/[^a-z0-9\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'unnamed';
+        const dt = new Date().toISOString().slice(0,10).replace(/-/g,'');
+        return `${slug}-${dt}`;
+      };
+      const sessionId = makeSessionId(customer);
+      const generatedAt = new Date().toISOString();
+
+      const payload = {
+        /* === ③ canonical root meta (ztelier 共通) === */
+        format: 'forg-v4',
+        tool_version: '1.1.0',
+        generated_at: generatedAt,
+        customer: {
+          company_name: customer || 'unnamed',
+          session_id: sessionId
+        },
+        /* === 後方互換: 既存 Endeavor importForg の schema_version パス保持 === */
+        meta:{
+          schema_version:'1.1.0',
+          ztelier_version:'1.1.0',
+          session_id: sessionId,
+          created_at: generatedAt,
+          created_by:'Forg Ztelier v1.1.0'
+        },
+        forg:{
+          completed:true,
+          version:'4.3.0',
+          variables:{ S:calc.S, L:calc.L, C:calc.C, LP:calc.LP },
+          budget_ratio: calc.budgetScore>0 ? {
+            it_budget_jpy: sc.itBudget*100000000,
+            annual_revenue_jpy: sc.revenue*100000000,
+            ratio_percent: calc.budgetRatio,
+            score: calc.budgetScore
+          } : null,
+          F_value: calc.forg,
+          F_status: calc.answered===0 ? null : (calc.forg<1?'変革の加速帯':calc.forg<2?'変革の停滞帯':'変革の膠着帯'),
+          industry_average_F: calc.forgIndustryAvg,
+          deviation_from_average: calc.forg - calc.forgIndustryAvg,
+          archetype: { cell_id:calc.arcCell, name_ja:calc.archetype, description_ja:calc.arcDesc },
+          contradictions: calc.contradictions.map(c=>({ pattern_id:null, title_ja:c.title, description_ja:c.desc })),
+          damage_estimate_jpy: calc.damage*100000000,
+          recommendations: calc.recs.map(r=>({ priority:r.p, title_ja:r.t, description_ja:r.d, trigger_variable:null })),
+          dominant_pattern: calc.dominantPattern,
+          suggestion: calc.suggestion
+        }
+      };
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ztelier-context-${customer||'unnamed'}-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e){
+      alert('Endeavor 連携エラー: ' + e.message);
+      console.error(e);
+    }
+  };
+
+  return (
+    <Fragment>
+      <Hero
+        num="05"
+        chapterLabel="Result · 診断結果"
+        kicker="The coefficient of your change."
+        title={<>Your F<sub>org</sub> is <em style={{color:forgColor}}>{forgStr}</em>.</>}
+        lede={<>{customer && <><b>{customer}</b> の</>}組織摩擦係数は <b style={{color:forgColor}}>{forgStatus}</b> にあります。分子と分母、矛盾、そして次の一手——以下に示します。</>}
+        stats={[
+          {label:'F value', value:calc.forg, unit:'', caption:forgStatus, decimals:2},
+          {label:'vs industry avg', value:(calc.forg - calc.forgIndustryAvg), caption:`industry F ${calc.forgIndustryAvg.toFixed(2)}`, decimals:2},
+          {label:'answered', value:(calc.answered/19)*100, unit:'%', caption:`${calc.answered} / 19 問`, decimals:0},
+        ]}
+      />
+      <div className="section-divider"/>
+
+      <section className="section">
+        <div className="container">
+          <ChapterMarker num="05.2" label="Forg meter & archetype · 係数と体質"/>
+          <div className="reveal result-grid" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16}}>
+
+            {/* F meter card */}
+            <div className="card elevated" style={{padding:'28px 30px'}}>
+              <div className="eyebrow">Forg meter</div>
+
+              <div style={{textAlign:'center', marginBottom:20}}>
+                <div className="metric-xxl num" style={{color:forgColor}}>
+                  <Counter value={calc.forg} decimals={2}/>
+                </div>
+                <div style={{fontSize:16, fontWeight:500, color:forgColor, marginTop:8, letterSpacing:'-0.005em'}}>
+                  {forgStatus}
+                </div>
+              </div>
+
+              <div className="fmeter-track">
+                <div className="fmeter-fill" style={{width:`${Math.min(100,(calc.forg/3)*100)}%`, background:forgColor}}/>
+              </div>
+              <div className="fmeter-scale">
+                <span>0.0</span><span>1.0</span><span>2.0</span><span>3.0+</span>
+              </div>
+
+              <div style={{marginTop:24}}>
+                {vars.map(p=>(
+                  <div key={p.k} style={{display:'flex', alignItems:'center', gap:12, marginBottom:12}}>
+                    <span className="mono" style={{width:28, fontSize:12.5, fontWeight:500, color:p.c}}>{p.k}</span>
+                    <span style={{width:64, fontSize:11.5, color:'var(--ink-3)'}}>{p.ja}</span>
+                    <div style={{flex:1, height:4, background:'var(--bg-3)', borderRadius:2, overflow:'hidden'}}>
+                      <div style={{width:`${(p.v/5)*100}%`, height:'100%', background:p.c, borderRadius:2, transition:'width .6s cubic-bezier(.2,.6,.2,1)'}}/>
+                    </div>
+                    <span className="mono" style={{width:40, fontSize:13, color:p.c, textAlign:'right', fontWeight:500}}>
+                      {p.v>0 ? p.v.toFixed(1) : '—'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {calc.damage>0 && (
+                <div style={{marginTop:20, paddingTop:16, borderTop:'1px solid var(--line)'}}>
+                  <div style={{fontSize:12, color:'var(--ink-2)'}}>想定被害額 <span style={{color:'var(--ink-3)'}}>※簡易推計</span></div>
+                  <div className="metric-lg num" style={{color:'var(--danger)', fontSize:'clamp(28px, 3.4vw, 40px)', marginTop:4}}>
+                    <Counter value={calc.damage} decimals={1}/>
+                    <span style={{fontSize:14, color:'var(--ink-3)', marginLeft:6, fontWeight:400, fontFamily:'var(--font-sans)'}}>億円</span>
+                  </div>
+                  <div style={{fontSize:11, color:'var(--ink-3)', marginTop:8, lineHeight:1.65, padding:'10px 12px', background:'var(--bg-2)', borderRadius:10, border:'1px solid var(--line)', fontFamily:'var(--font-jp)'}}>
+                    算出: 年間売上÷365×停止14日×利益率20%＋信用毀損2億円。業種・規模により変動します。
+                  </div>
+                </div>
+              )}
+
+              {calc.budgetScore>0 && (
+                <div style={{marginTop:12, fontSize:12, color:'var(--ink-2)'}}>
+                  IT予算比率: <span className="mono" style={{fontWeight:500,
+                    color: calc.budgetRatio<3?'var(--danger)':calc.budgetRatio<5?'var(--warn)':calc.budgetRatio<8?'var(--trust)':'var(--info)'
+                  }}>{calc.budgetRatio.toFixed(1)}%</span>
+                  <span style={{color:'var(--ink-3)', marginLeft:8, fontFamily:'var(--font-mono)', fontSize:10, letterSpacing:'.04em'}}>JP 3.2 · Global 5.5 · US 8.2</span>
+                </div>
+              )}
+            </div>
+
+            {/* Matrix card */}
+            <div className="card elevated" style={{padding:'28px 30px'}}>
+              <div className="eyebrow">Organizational archetype</div>
+
+              <div style={{fontSize:10, color:'var(--ink-3)', textAlign:'center', marginBottom:8, fontFamily:'var(--font-mono)', letterSpacing:'.14em', textTransform:'uppercase', fontWeight:500}}>
+                L' (変革意志) high
+              </div>
+              <div className="matrix">
+                {[
+                  {cell:'tl', icon:'lightning', name:'孤立無援', em:'Lonely idealist', color:'var(--warn)'},
+                  {cell:'tr', icon:'rocket',    name:'変革の臨界点', em:'Zenith',         color:'var(--trust)'},
+                  {cell:'bl', icon:'sleep',     name:'安穏・思考停止', em:'Slumber',       color:'var(--ink-3)'},
+                  {cell:'br', icon:'fire',      name:'外圧依存', em:'Forced by crisis', color:'var(--danger)'},
+                ].map(m=>(
+                  <div key={m.cell} className={`mcell ${calc.arcCell===m.cell?'active':''}`}>
+                    <div className="mcell-icon" style={{color:m.color}}>
+                      <Icon name={m.icon} size={32}/>
+                    </div>
+                    <div className="mcell-name">
+                      {m.name}
+                      <em>{m.em}</em>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:'flex', justifyContent:'space-between', fontSize:10, color:'var(--ink-3)', fontFamily:'var(--font-mono)', letterSpacing:'.14em', textTransform:'uppercase', marginTop:4, fontWeight:500}}>
+                <span>C low</span><span>C high</span>
+              </div>
+
+              <div style={{
+                marginTop:20, padding:'18px 20px', borderRadius:12,
+                background:`color-mix(in oklab, ${calc.arcColor} 6%, var(--bg-1))`,
+                border:`1px solid color-mix(in oklab, ${calc.arcColor} 30%, var(--line))`
+              }}>
+                <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:10}}>
+                  <span style={{color:calc.arcColor, display:'inline-flex'}}>
+                    <Icon name={calc.arcIcon} size={22}/>
+                  </span>
+                  <span style={{fontSize:17, color:calc.arcColor, fontWeight:600, letterSpacing:'-0.015em'}}>{calc.archetype}</span>
+                </div>
+                <div style={{fontFamily:'var(--font-jp)', fontWeight:300, fontSize:13, color:'var(--ink-2)', lineHeight:1.75}}>{calc.arcDesc}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {calc.answered>=10 && calc.dominantPattern && (
+        <Fragment>
+          <div className="section-divider"/>
+          <section className="section">
+            <div className="container">
+              <ChapterMarker num="05.3" label="Executive summary · 経営層サマリ"/>
+              <div className="reveal" style={{marginBottom:28}}>
+                <h2 className="h-display" style={{fontSize:'clamp(28px, 3.6vw, 44px)', margin:0, maxWidth:'22ch', lineHeight:1.08, fontWeight:500}}>
+                  次の一手を、<em>一言</em>で。
+                </h2>
+              </div>
+              <div className="reveal d1 exec-wrap" style={{'--exec-color':execColor}}>
+                <div className="exec-grid">
+                  <div>
+                    <div className="exec-lbl">Diagnosis · 診断</div>
+                    <div className="exec-pname" style={{color:execColor}}>{calc.dominantPattern.pattern_name_ja}</div>
+                    <div className="exec-diag">{calc.dominantPattern.diagnosis_ja}</div>
+                    <div className="exec-dev">
+                      最大偏差: {calc.dominantPattern.most_deviated_variable} 軸（業界平均 F {calc.forgIndustryAvg.toFixed(2)} 比）
+                    </div>
+                  </div>
+                  <div className="exec-action" style={{
+                    background:`color-mix(in oklab, ${execColor} 6%, var(--bg-1))`,
+                    borderColor:`color-mix(in oklab, ${execColor} 28%, var(--line))`
+                  }}>
+                    <div className="exec-lbl">Next action · 次の一手</div>
+                    <div className="exec-act-txt">{calc.suggestion.action_ja}</div>
+                    <div className="exec-act-ref">ref. {calc.suggestion.reference_framework}</div>
+                  </div>
+                </div>
+                <div className="exec-foot">{calc.suggestion.common_footer_ja}</div>
+              </div>
+            </div>
+          </section>
+        </Fragment>
+      )}
+
+      {calc.contradictions.length>0 && (
+        <Fragment>
+          <div className="section-divider"/>
+          <section className="section">
+            <div className="container">
+              <ChapterMarker num="05.4" label={`Contradictions · 矛盾検出（${calc.contradictions.length}件）`}/>
+              <div className="reveal" style={{marginBottom:28}}>
+                <h2 className="h-display" style={{fontSize:'clamp(26px, 3.4vw, 42px)', margin:0, maxWidth:'24ch', lineHeight:1.12, fontWeight:500}}>
+                  言葉と行動の<em>ズレ</em>を、<br/>静かに可視化する。
+                </h2>
+              </div>
+              <div className="reveal d1">
+                {calc.contradictions.map((c,i)=>(
+                  <div key={i} className="contra">
+                    <div className="contra-title">
+                      <Icon name="warning" size={14}/>
+                      {c.title}
+                    </div>
+                    <div className="contra-desc">{c.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </Fragment>
+      )}
+
+      <div className="section-divider"/>
+      <section className="section">
+        <div className="container">
+          <ChapterMarker num="05.5" label={`Actions · 変革アクション優先順位（${calc.recs.length}件）`}/>
+          <div className="reveal" style={{marginBottom:28}}>
+            <h2 className="h-display" style={{fontSize:'clamp(26px, 3.4vw, 42px)', margin:0, maxWidth:'22ch', lineHeight:1.12, fontWeight:500}}>
+              一つずつ、<em>重みの順</em>に。
+            </h2>
+          </div>
+          <div className="reveal d1 card elevated" style={{padding:'18px 28px'}}>
+            {calc.recs.map((r,i)=>(
+              <div key={i} className="rec">
+                <span className={`rec-pri pri-${r.p}`}>
+                  {r.p===1?'URGENT':r.p===2?'MEDIUM':'BASELINE'}
+                </span>
+                <div>
+                  <div className="rec-title">{r.t}</div>
+                  <div className="rec-desc">{r.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider no-print"/>
+      <section className="section tight no-print">
+        <div className="container" style={{display:'flex', justifyContent:'center', gap:12, flexWrap:'wrap'}}>
+          <button className="btn" onClick={doReset}>
+            <Icon name="refresh" size={14}/>リセット
+          </button>
+          <button className="btn" onClick={()=>window.print()}>
+            <Icon name="printer" size={14}/>PDF出力
+          </button>
+          <button className="btn trust" onClick={doExport}>
+            <Icon name="upload" size={14}/>Endeavor 連携
+          </button>
+        </div>
+      </section>
+    </Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
