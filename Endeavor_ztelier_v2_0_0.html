@@ -1270,24 +1270,6 @@ function calc(){
   /* 理想値（スコープ100%時）: SCF補正前 vulnCoeff を使用 */
   const cyberProb_tobe_ideal = S.baseRisk + S.cyberRiskMax * S.toBe_vulnCoeff_ideal;
   const dlpProb_tobe_ideal   = S.baseRisk + S.dlpRiskMax * S.toBe_dlpVulnCoeff_ideal;
-  /* === v1.5.0 (QA Audit C5 fix): 侵害確率の SCF 連動 ===
-     旧: cyberProb_tobe = baseRisk + cyberRiskMax × toBe_vulnCoeff
-         → SCF は impactRate / recoveryCostRate にのみ作用し、確率は理想値固定
-     問題: 部分導入では脆弱性も部分残存するべきなのに侵害確率は常に理想 (3.9%) になる
-     新: AS-IS と理想 TO-BE を networksSCF / dataSCF で線形補間
-         SCF=1.0 → 理想 toBe_vulnCoeff、SCF=0.0 → AS-IS まで戻る
-     ※ MAAZ 連携時は STATE.toBe_vulnCoeff が既にスコープ補正済の effectiveCoverage 値だが、
-       MAAZ 未連携 (maazFallbackSCF=0.5) や手動入力時にも一貫した連動を保証する */
-  const eff_toBe_vulnCoeff_cyber =
-      (S.maazEffectiveCoverage && typeof S.maazEffectiveCoverage.toBeVulnCoeffEffective === 'number')
-        ? S.toBe_vulnCoeff   /* MAAZ 連携時: 既に SCF 補正済値を使用 (旧挙動を維持) */
-        : (S.toBe_vulnCoeff_ideal + (S.vulnCoeff - S.toBe_vulnCoeff_ideal) * (1 - networksSCF));
-  const eff_toBe_dlpVulnCoeff =
-      (S.maazEffectiveCoverage && typeof S.maazEffectiveCoverage.toBeVulnCoeffEffective === 'number')
-        ? S.toBe_dlpVulnCoeff
-        : (S.toBe_dlpVulnCoeff_ideal + (S.dlpVulnCoeff - S.toBe_dlpVulnCoeff_ideal) * (1 - dataSCF));
-  const cyberProb_tobe = S.baseRisk + S.cyberRiskMax * eff_toBe_vulnCoeff_cyber;
-  const dlpProb_tobe = S.baseRisk + S.dlpRiskMax * eff_toBe_dlpVulnCoeff;
 
   const hardSec = secTotal * (S.secReduction / 100);
   const hardHW = S.hwCost * (S.hwReduction / 100);
@@ -1325,6 +1307,25 @@ function calc(){
   const dataSCF = (S.maazEffectiveCoverage && S.maazEffectiveCoverage.byPillar &&
                    S.maazEffectiveCoverage.byPillar["Data"])
                   ? S.maazEffectiveCoverage.byPillar["Data"].scf : _scfFallback;
+
+  /* === v1.5.0 (QA Audit C5 fix): 侵害確率の SCF 連動 ===
+     旧: cyberProb_tobe = baseRisk + cyberRiskMax × toBe_vulnCoeff
+         → SCF は impactRate / recoveryCostRate にのみ作用し、確率は理想値固定
+     問題: 部分導入では脆弱性も部分残存するべきなのに侵害確率は常に理想 (3.9%) になる
+     新: AS-IS と理想 TO-BE を networksSCF / dataSCF で線形補間
+         SCF=1.0 → 理想 toBe_vulnCoeff、SCF=0.0 → AS-IS まで戻る
+     ※ MAAZ 連携時は STATE.toBe_vulnCoeff が既にスコープ補正済の effectiveCoverage 値だが、
+       MAAZ 未連携 (maazFallbackSCF=0.5) や手動入力時にも一貫した連動を保証する */
+  const eff_toBe_vulnCoeff_cyber =
+      (S.maazEffectiveCoverage && typeof S.maazEffectiveCoverage.toBeVulnCoeffEffective === 'number')
+        ? S.toBe_vulnCoeff   /* MAAZ 連携時: 既に SCF 補正済値を使用 (旧挙動を維持) */
+        : (S.toBe_vulnCoeff_ideal + (S.vulnCoeff - S.toBe_vulnCoeff_ideal) * (1 - networksSCF));
+  const eff_toBe_dlpVulnCoeff =
+      (S.maazEffectiveCoverage && typeof S.maazEffectiveCoverage.toBeVulnCoeffEffective === 'number')
+        ? S.toBe_dlpVulnCoeff
+        : (S.toBe_dlpVulnCoeff_ideal + (S.dlpVulnCoeff - S.toBe_dlpVulnCoeff_ideal) * (1 - dataSCF));
+  const cyberProb_tobe = S.baseRisk + S.cyberRiskMax * eff_toBe_vulnCoeff_cyber;
+  const dlpProb_tobe = S.baseRisk + S.dlpRiskMax * eff_toBe_dlpVulnCoeff;
 
   // impactRate: AS-IS 20% → TO-BE 2% への縮小を SCF で減衰
   const eff_toBe_impactRate = S.impactRate - (S.impactRate - S.toBe_impactRate) * networksSCF;
